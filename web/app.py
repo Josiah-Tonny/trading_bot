@@ -56,7 +56,8 @@ def api_signal():
 def api_message():
     data = request.json
     # Process the incoming message
-    response = {"reply": f"You said: {data.get('message')}"}
+    message = data.get('message') if data else ''
+    response = {"reply": f"You said: {message}"}
     return jsonify(response)
 
 if __name__ == '__main__':

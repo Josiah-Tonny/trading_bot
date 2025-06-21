@@ -25,3 +25,14 @@ Push your initial setup to GitHub so collaborators can pull and contribute.
 /change_symbol — Change or add a trading symbol (for a fee)
 /support — Get support/contact info
 /terms — Show terms and disclaimer
+
+# Felix
+1. Web pages integration
+    - base.html
+    - index.html
+    - signals.html
+    - login.html
+    - dashboard.html
+2. User Authentication
+    -Login and registration forms
+    -User session management
