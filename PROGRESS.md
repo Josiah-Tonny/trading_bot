@@ -26,6 +26,17 @@ Push your initial setup to GitHub so collaborators can pull and contribute.
 /support — Get support/contact info
 /terms — Show terms and disclaimer
 
+# intergration
+
+Telegram Bot: Payment & Subscription Flow
+Implement /subscribe and /change_symbol commands in your Telegram bot (telegram_bot.py and handlers).
+Integrate Telegram Payments API or Stripe/PayPal/mpesa/visa for subscriptions and symbol changes.
+Handle payment callbacks: Set up webhook endpoints (Flask or FastAPI) to receive payment events and update user status in your database.
+
+Files added:
+    - app/handlers/subscribe_command.py
+    - app/handlers/change_symbol.py
+
 # Felix
 1. Web pages integration
     - base.html

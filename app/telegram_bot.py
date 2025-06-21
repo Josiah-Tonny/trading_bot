@@ -5,11 +5,14 @@ from telegram.ext import (
     ContextTypes,
     CallbackContext,
     filters,
+    CallbackQueryHandler,
 )
 from telegram import Update
 import logging
 import os
 from dotenv import load_dotenv
+from app.handlers.subscribe_command import subscribe_command, subscribe_callback_handler
+from app.handlers.change_symbol import change_symbol_command
 
 # Load environment variables
 load_dotenv()
@@ -59,9 +62,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
 
 
 async def subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(
-        "To subscribe, please visit: [your payment link here] or use Telegram Payments (coming soon)."
-    )
+    await subscribe_command(update, context)
 
 
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -77,9 +78,7 @@ async def signals(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def change_symbol(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(
-        "To change your trading symbol, please pay the required fee. (Integration coming soon.)"
-    )
+    await change_symbol_command(update, context)
 
 
 async def support(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -105,6 +104,7 @@ def main() -> None:
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("subscribe", subscribe))
+    application.add_handler(CallbackQueryHandler(subscribe_callback_handler, pattern="^pay_"))
     application.add_handler(CommandHandler("status", status))
     application.add_handler(CommandHandler("signals", signals))
     application.add_handler(CommandHandler("change_symbol", change_symbol))
