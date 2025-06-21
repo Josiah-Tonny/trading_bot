@@ -1,0 +1,16 @@
+name: Notify on Change
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Notify
+        run: echo "Files have changed or been added by a collaborator."
