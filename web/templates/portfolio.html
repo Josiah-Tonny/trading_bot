@@ -4,253 +4,90 @@
 
 {% block extra_css %}
 <style>
-    .portfolio-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        flex-wrap: wrap;
-        gap: 1rem;
+    body.portfolio-bg {
+        background: linear-gradient(135deg, #f9fafb 0%, #3B82F6 10%, #F59E0B 100%);
+        transition: background 0.5s cubic-bezier(.4,0,.2,1);
     }
-
-    .portfolio-value {
-        text-align: right;
+    body.dark.portfolio-bg {
+        background: linear-gradient(135deg, #1E293B 0%, #3B82F6 100%);
     }
-
-    .portfolio-amount {
-        font-size: 3rem;
-        font-weight: 700;
-        color: var(--primary-blue);
-        margin-bottom: 0.5rem;
+    .container, .portfolio-header, .portfolio-tabs, .portfolio-grid {
+        opacity: 0;
+        transition: opacity 0.7s cubic-bezier(.4,0,.2,1);
     }
-
-    .dark .portfolio-amount {
-        color: var(--dark-accent);
+    body.loaded .container, body.loaded .portfolio-header, body.loaded .portfolio-tabs, body.loaded .portfolio-grid {
+        opacity: 1;
     }
-
-    .portfolio-change {
-        font-size: 1.2rem;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 0.5rem;
-    }
-
-    .portfolio-tabs {
-        display: flex;
-        background: var(--white);
-        border: 1px solid var(--border-gray);
-        border-radius: 8px;
-        padding: 0.25rem;
-        margin-bottom: 2rem;
-    }
-
-    .dark .portfolio-tabs {
-        background: var(--dark-surface);
-        border-color: var(--dark-border);
-    }
-
-    .portfolio-tab {
-        flex: 1;
-        padding: 0.75rem 1.5rem;
-        text-align: center;
-        border: none;
-        background: transparent;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 500;
-        color: var(--text-muted);
-        transition: all 0.2s ease;
-    }
-
-    .dark .portfolio-tab {
-        color: var(--dark-muted);
-    }
-
-    .portfolio-tab.active {
-        background: var(--primary-blue);
-        color: var(--white);
-    }
-
-    .dark .portfolio-tab.active {
-        background: var(--dark-accent);
-        color: var(--white);
-    }
-
-    .portfolio-grid {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 2rem;
-        margin-bottom: 2rem;
-    }
-
-    .positions-card {
-        background: var(--white);
-        border: 1px solid var(--border-gray);
-        border-radius: 12px;
-        overflow: hidden;
-    }
-
-    .dark .positions-card {
-        background: var(--dark-surface);
-        border-color: var(--dark-border);
-    }
-
-    .positions-header {
-        padding: 1.5rem;
-        border-bottom: 1px solid var(--border-gray);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .dark .positions-header {
-        border-bottom-color: var(--dark-border);
-    }
-
-    .positions-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .positions-table th,
-    .positions-table td {
-        padding: 1rem 1.5rem;
-        text-align: left;
-        border-bottom: 1px solid var(--border-gray);
-    }
-
-    .dark .positions-table th,
-    .dark .positions-table td {
-        border-bottom-color: var(--dark-border);
-    }
-
-    .positions-table th {
-        background: var(--light-gray);
-        font-weight: 600;
-        font-size: 0.875rem;
-        color: var(--text-muted);
-    }
-
-    .dark .positions-table th {
-        background: var(--dark-bg);
-        color: var(--dark-muted);
-    }
-
-    .position-symbol {
-        font-weight: 600;
-        color: var(--primary-blue);
-        font-size: 1.1rem;
-    }
-
-    .dark .position-symbol {
-        color: var(--dark-accent);
-    }
-
-    .position-name {
-        font-size: 0.875rem;
-        color: var(--text-muted);
-        margin-top: 0.25rem;
-    }
-
-    .dark .position-name {
-        color: var(--dark-muted);
-    }
-
-    .allocation-chart {
-        height: 300px;
-        background: var(--light-gray);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 1.5rem;
-    }
-
-    .dark .allocation-chart {
-        background: var(--dark-bg);
-    }
-
-    .performance-metrics {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-    }
-
-    .metric-item {
-        text-align: center;
-        padding: 1rem;
-        background: var(--light-gray);
+    /* Skeleton Loader */
+    .skeleton {
+        background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.2s infinite linear;
         border-radius: 8px;
     }
-
-    .dark .metric-item {
-        background: var(--dark-bg);
+    @keyframes skeleton-loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
     }
-
-    .metric-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin-bottom: 0.25rem;
+    .dark .skeleton {
+        background: linear-gradient(90deg, #232b3b 25%, #2d3748 50%, #232b3b 75%);
     }
-
-    .metric-label {
-        font-size: 0.875rem;
-        color: var(--text-muted);
+    /* Smooth Navigation */
+    .portfolio-tab, .btn, .positions-card, .card, .metric-item, .allocation-chart {
+        transition: background 0.3s, color 0.3s, box-shadow 0.3s, transform 0.2s;
     }
-
-    .dark .metric-label {
-        color: var(--dark-muted);
+    .btn:active, .portfolio-tab:active {
+        transform: scale(0.97);
     }
-
-    .position-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-
+    /* Responsive Improvements */
     @media (max-width: 1024px) {
         .portfolio-grid {
             grid-template-columns: 1fr;
         }
-        
         .portfolio-header {
             flex-direction: column;
             text-align: center;
         }
-        
         .portfolio-value {
             text-align: center;
         }
+        .positions-card, .card {
+            margin-bottom: 1.5rem;
+        }
     }
-
     @media (max-width: 640px) {
         .performance-metrics {
             grid-template-columns: 1fr;
         }
-        
         .portfolio-tabs {
             flex-direction: column;
+        }
+        .positions-card, .card {
+            margin-bottom: 1rem;
+        }
+        .container {
+            padding: 0.5rem;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<div id="skeleton-portfolio" style="display:none;">
+    <div class="skeleton" style="height: 60px; width: 60%; margin: 2rem auto;"></div>
+    <div class="skeleton" style="height: 40px; width: 80%; margin: 1rem auto;"></div>
+    <div class="skeleton" style="height: 200px; margin: 2rem auto;"></div>
+    <div class="skeleton" style="height: 120px; width: 90%; margin: 1rem auto;"></div>
+</div>
 <div class="container">
     <div style="padding: 2rem 0;">
-        <div class="portfolio-header">
-            <div>
+        <div class="portfolio-header" style="display: flex; flex-wrap: wrap; align-items: center; gap: 1rem;">
+            <div style="flex: 1;">
                 <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">Portfolio</h1>
                 <p class="text-muted">Track your investments and performance</p>
             </div>
-            <div class="portfolio-value">
-                <div class="portfolio-amount">$125,750.50</div>
-                <div class="portfolio-change text-success">
-                    <i class="fas fa-arrow-up"></i>
-                    +$2,750.50 (+2.24%)
-                </div>
-            </div>
+            <a href="/dashboard" class="btn btn-outline btn-sm"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="/trade" class="btn btn-outline btn-sm"><i class="fas fa-exchange-alt"></i> Trade</a>
         </div>
 
         <div class="portfolio-tabs">
@@ -383,6 +220,17 @@
             </div>
 
             <div>
+                <!-- Subscription Status/Account Info Widget -->
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <i class="fas fa-crown" style="color: var(--wealth-gold); font-size: 1.5rem;"></i>
+                        <div>
+                            <div style="font-weight: 600;">Subscription: <span style="color: var(--primary-blue);">Pro Tier</span></div>
+                            <div style="font-size: 0.9rem; color: var(--text-muted);">Trial ends in 5 days • <a href="#" style="color: var(--primary-blue); text-decoration: underline;">Upgrade</a></div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Allocation Chart -->
                 <div class="card" style="margin-bottom: 1.5rem;">
                     <div style="padding: 1.5rem; border-bottom: 1px solid var(--border-gray);">
@@ -480,6 +328,29 @@
             // Here you would typically load different content based on the selected tab
             console.log('Selected tab:', this.textContent);
         });
+    });
+
+    // Portfolio skeleton loader and smooth loading
+    document.addEventListener('DOMContentLoaded', function() {
+        document.body.classList.add('portfolio-bg');
+        const container = document.querySelector('.container');
+        const header = document.querySelector('.portfolio-header');
+        const tabs = document.querySelector('.portfolio-tabs');
+        const grid = document.querySelector('.portfolio-grid');
+        const skeleton = document.getElementById('skeleton-portfolio');
+        skeleton.style.display = 'block';
+        if(container) container.style.opacity = 0;
+        if(header) header.style.opacity = 0;
+        if(tabs) tabs.style.opacity = 0;
+        if(grid) grid.style.opacity = 0;
+        setTimeout(() => {
+            skeleton.style.display = 'none';
+            document.body.classList.add('loaded');
+            if(container) container.style.opacity = 1;
+            if(header) header.style.opacity = 1;
+            if(tabs) tabs.style.opacity = 1;
+            if(grid) grid.style.opacity = 1;
+        }, 1200); // Simulate loading
     });
 </script>
 {% endblock %}

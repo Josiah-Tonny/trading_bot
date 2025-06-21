@@ -4,330 +4,84 @@
 
 {% block extra_css %}
 <style>
-    .trade-container {
-        padding: 2rem 0;
+    body.trade-bg {
+        background: linear-gradient(135deg, #f9fafb 0%, #3B82F6 10%, #F59E0B 100%);
+        transition: background 0.5s cubic-bezier(.4,0,.2,1);
     }
-
-    .trade-grid {
-        display: grid;
-        grid-template-columns: 1fr 400px;
-        gap: 2rem;
+    body.dark.trade-bg {
+        background: linear-gradient(135deg, #1E293B 0%, #3B82F6 100%);
     }
-
-    .trade-form {
-        background: var(--white);
-        border: 1px solid var(--border-gray);
-        border-radius: 12px;
-        padding: 2rem;
+    .trade-container, .trade-grid, .trade-form, .quote-card, .recent-orders, .card {
+        opacity: 0;
+        transition: opacity 0.7s cubic-bezier(.4,0,.2,1);
     }
-
-    .dark .trade-form {
-        background: var(--dark-surface);
-        border-color: var(--dark-border);
+    body.loaded .trade-container, body.loaded .trade-grid, body.loaded .trade-form, body.loaded .quote-card, body.loaded .recent-orders, body.loaded .card {
+        opacity: 1;
     }
-
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-
-    .form-label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 600;
-        color: var(--charcoal);
-    }
-
-    .dark .form-label {
-        color: var(--dark-text);
-    }
-
-    .form-control {
-        width: 100%;
-        padding: 0.75rem;
-        border: 2px solid var(--border-gray);
+    /* Skeleton Loader */
+    .skeleton {
+        background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.2s infinite linear;
         border-radius: 8px;
-        font-size: 1rem;
-        transition: border-color 0.2s ease;
-        background: var(--white);
-        color: var(--charcoal);
     }
-
-    .dark .form-control {
-        background: var(--dark-bg);
-        border-color: var(--dark-border);
-        color: var(--dark-text);
+    @keyframes skeleton-loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
     }
-
-    .form-control:focus {
-        outline: none;
-        border-color: var(--primary-blue);
+    .dark .skeleton {
+        background: linear-gradient(90deg, #232b3b 25%, #2d3748 50%, #232b3b 75%);
     }
-
-    .dark .form-control:focus {
-        border-color: var(--dark-accent);
+    /* Smooth Navigation */
+    .order-type-tab, .side-btn, .btn, .trade-form, .quote-card, .card {
+        transition: background 0.3s, color 0.3s, box-shadow 0.3s, transform 0.2s;
     }
-
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
+    .btn:active, .order-type-tab:active, .side-btn:active {
+        transform: scale(0.97);
     }
-
-    .order-type-tabs {
-        display: flex;
-        background: var(--light-gray);
-        border-radius: 8px;
-        padding: 0.25rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .dark .order-type-tabs {
-        background: var(--dark-bg);
-    }
-
-    .order-type-tab {
-        flex: 1;
-        padding: 0.75rem;
-        text-align: center;
-        border: none;
-        background: transparent;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 500;
-        color: var(--text-muted);
-        transition: all 0.2s ease;
-    }
-
-    .dark .order-type-tab {
-        color: var(--dark-muted);
-    }
-
-    .order-type-tab.active {
-        background: var(--white);
-        color: var(--primary-blue);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .dark .order-type-tab.active {
-        background: var(--dark-surface);
-        color: var(--dark-accent);
-    }
-
-    .side-buttons {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .side-btn {
-        padding: 1rem;
-        border: 2px solid var(--border-gray);
-        border-radius: 8px;
-        background: var(--white);
-        cursor: pointer;
-        font-weight: 600;
-        transition: all 0.2s ease;
-    }
-
-    .dark .side-btn {
-        background: var(--dark-bg);
-        border-color: var(--dark-border);
-        color: var(--dark-text);
-    }
-
-    .side-btn.buy {
-        color: var(--success-green);
-    }
-
-    .side-btn.buy.active {
-        background: var(--success-green);
-        color: var(--white);
-        border-color: var(--success-green);
-    }
-
-    .side-btn.sell {
-        color: var(--danger-red);
-    }
-
-    .side-btn.sell.active {
-        background: var(--danger-red);
-        color: var(--white);
-        border-color: var(--danger-red);
-    }
-
-    .order-summary {
-        background: var(--light-gray);
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin: 1.5rem 0;
-    }
-
-    .dark .order-summary {
-        background: var(--dark-bg);
-    }
-
-    .summary-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 0.75rem;
-    }
-
-    .summary-row:last-child {
-        margin-bottom: 0;
-        padding-top: 0.75rem;
-        border-top: 1px solid var(--border-gray);
-        font-weight: 600;
-    }
-
-    .dark .summary-row:last-child {
-        border-top-color: var(--dark-border);
-    }
-
-    .quote-card {
-        background: var(--white);
-        border: 1px solid var(--border-gray);
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .dark .quote-card {
-        background: var(--dark-surface);
-        border-color: var(--dark-border);
-    }
-
-    .quote-symbol {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--primary-blue);
-        margin-bottom: 0.5rem;
-    }
-
-    .dark .quote-symbol {
-        color: var(--dark-accent);
-    }
-
-    .quote-price {
-        font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
-
-    .quote-change {
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .market-data {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    .data-item {
-        text-align: center;
-        padding: 0.75rem;
-        background: var(--light-gray);
-        border-radius: 6px;
-    }
-
-    .dark .data-item {
-        background: var(--dark-bg);
-    }
-
-    .data-label {
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        margin-bottom: 0.25rem;
-    }
-
-    .dark .data-label {
-        color: var(--dark-muted);
-    }
-
-    .data-value {
-        font-weight: 600;
-        font-family: monospace;
-    }
-
-    .recent-orders {
-        background: var(--white);
-        border: 1px solid var(--border-gray);
-        border-radius: 12px;
-        padding: 1.5rem;
-    }
-
-    .dark .recent-orders {
-        background: var(--dark-surface);
-        border-color: var(--dark-border);
-    }
-
-    .order-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem 0;
-        border-bottom: 1px solid var(--border-gray);
-    }
-
-    .dark .order-item {
-        border-bottom-color: var(--dark-border);
-    }
-
-    .order-item:last-child {
-        border-bottom: none;
-    }
-
-    .order-status {
-        padding: 0.25rem 0.75rem;
-        border-radius: 12px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-
-    .status-filled {
-        background: #ECFDF5;
-        color: var(--success-green);
-    }
-
-    .status-pending {
-        background: #FEF3C7;
-        color: #D97706;
-    }
-
-    .status-cancelled {
-        background: #FEE2E2;
-        color: var(--danger-red);
-    }
-
+    /* Responsive Improvements */
     @media (max-width: 1024px) {
         .trade-grid {
             grid-template-columns: 1fr;
         }
+        .trade-container, .trade-grid, .trade-form, .quote-card, .recent-orders, .card {
+            margin-bottom: 1.5rem;
+        }
     }
-
     @media (max-width: 640px) {
         .form-row {
             grid-template-columns: 1fr;
         }
-        
         .market-data {
             grid-template-columns: 1fr;
+        }
+        .trade-container {
+            padding: 0.5rem 0;
+        }
+        .trade-form, .quote-card, .recent-orders, .card {
+            margin-bottom: 1rem;
+        }
+        .container {
+            padding: 0.5rem;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<div id="skeleton-trade" style="display:none;">
+    <div class="skeleton" style="height: 60px; width: 60%; margin: 2rem auto;"></div>
+    <div class="skeleton" style="height: 120px; margin-bottom: 1.5rem;"></div>
+    <div class="skeleton" style="height: 400px; margin-bottom: 1.5rem;"></div>
+    <div class="skeleton" style="height: 120px; width: 90%; margin-bottom: 1rem;"></div>
+</div>
+
 <div class="container">
     <div class="trade-container">
-        <div style="margin-bottom: 2rem;">
-            <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">Place Order</h1>
-            <p class="text-muted">Execute trades with real-time market data and advanced order types</p>
+        <div style="margin-bottom: 2rem; display: flex; flex-wrap: wrap; align-items: center; gap: 1rem;">
+            <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; flex: 1;">Place Order</h1>
+            <a href="/dashboard" class="btn btn-outline btn-sm"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="/portfolio" class="btn btn-outline btn-sm"><i class="fas fa-chart-pie"></i> Portfolio</a>
         </div>
 
         <div class="trade-grid">
@@ -509,6 +263,35 @@
 
 {% block extra_js %}
 <script>
+    // Trade skeleton loader and smooth loading
+    document.addEventListener('DOMContentLoaded', function() {
+        document.body.classList.add('trade-bg');
+        const container = document.querySelector('.trade-container');
+        const grid = document.querySelector('.trade-grid');
+        const form = document.querySelector('.trade-form');
+        const quote = document.querySelector('.quote-card');
+        const recent = document.querySelector('.recent-orders');
+        const cards = document.querySelectorAll('.card');
+        const skeleton = document.getElementById('skeleton-trade');
+        skeleton.style.display = 'block';
+        if(container) container.style.opacity = 0;
+        if(grid) grid.style.opacity = 0;
+        if(form) form.style.opacity = 0;
+        if(quote) quote.style.opacity = 0;
+        if(recent) recent.style.opacity = 0;
+        cards.forEach(card => card.style.opacity = 0);
+        setTimeout(() => {
+            skeleton.style.display = 'none';
+            document.body.classList.add('loaded');
+            if(container) container.style.opacity = 1;
+            if(grid) grid.style.opacity = 1;
+            if(form) form.style.opacity = 1;
+            if(quote) quote.style.opacity = 1;
+            if(recent) recent.style.opacity = 1;
+            cards.forEach(card => card.style.opacity = 1);
+        }, 1200); // Simulate loading
+    });
+
     // Order type tabs
     document.querySelectorAll('.order-type-tab').forEach(tab => {
         tab.addEventListener('click', function() {

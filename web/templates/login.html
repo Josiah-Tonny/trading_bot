@@ -4,19 +4,21 @@
 
 {% block extra_css %}
 <style>
+    body.login-bg {
+        background: linear-gradient(135deg, #f9fafb 0%, #3B82F6 10%, #F59E0B 100%);
+        transition: background 0.5s cubic-bezier(.4,0,.2,1);
+    }
+    body.dark.login-bg {
+        background: linear-gradient(135deg, #1E293B 0%, #3B82F6 100%);
+    }
     .login-container {
         min-height: calc(100vh - 80px);
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 2rem 0;
-        background: linear-gradient(135deg, var(--light-gray) 0%, var(--white) 100%);
+        transition: background 0.5s cubic-bezier(.4,0,.2,1);
     }
-
-    .dark .login-container {
-        background: linear-gradient(135deg, var(--dark-bg) 0%, var(--dark-surface) 100%);
-    }
-
     .login-card {
         background: var(--white);
         padding: 3rem;
@@ -25,196 +27,52 @@
         width: 100%;
         max-width: 400px;
         border: 1px solid var(--border-gray);
+        opacity: 0;
+        transition: opacity 0.7s cubic-bezier(.4,0,.2,1);
     }
-
+    body.loaded .login-card {
+        opacity: 1;
+    }
     .dark .login-card {
         background: var(--dark-surface);
         border-color: var(--dark-border);
         box-shadow: 0 20px 40px rgba(0,0,0,0.3);
     }
-
-    .login-header {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-
-    .login-header h2 {
-        color: var(--primary-blue);
-        font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
-
-    .dark .login-header h2 {
-        color: var(--dark-accent);
-    }
-
-    .login-header p {
-        color: var(--text-muted);
-    }
-
-    .dark .login-header p {
-        color: var(--dark-muted);
-    }
-
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-
-    .form-label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 600;
-        color: var(--charcoal);
-    }
-
-    .dark .form-label {
-        color: var(--dark-text);
-    }
-
-    .form-control {
-        width: 100%;
-        padding: 0.875rem;
-        border: 2px solid var(--border-gray);
+    /* Skeleton Loader */
+    .skeleton {
+        background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.2s infinite linear;
         border-radius: 8px;
-        font-size: 1rem;
-        transition: all 0.2s ease;
-        background: var(--white);
-        color: var(--charcoal);
     }
-
-    .dark .form-control {
-        background: var(--dark-bg);
-        border-color: var(--dark-border);
-        color: var(--dark-text);
+    @keyframes skeleton-loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
     }
-
-    .form-control:focus {
-        outline: none;
-        border-color: var(--primary-blue);
-        box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+    .dark .skeleton {
+        background: linear-gradient(90deg, #232b3b 25%, #2d3748 50%, #232b3b 75%);
     }
-
-    .dark .form-control:focus {
-        border-color: var(--dark-accent);
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    /* Smooth Navigation */
+    .btn, .form-control, .login-card, .login-header h2, .login-header p {
+        transition: background 0.3s, color 0.3s, box-shadow 0.3s, transform 0.2s;
     }
-
-    .form-check {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 1.5rem;
+    .btn:active {
+        transform: scale(0.97);
     }
-
-    .form-check label {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.875rem;
-        color: var(--charcoal);
-        cursor: pointer;
-    }
-
-    .dark .form-check label {
-        color: var(--dark-text);
-    }
-
-    .forgot-link {
-        color: var(--primary-blue);
-        text-decoration: none;
-        font-size: 0.875rem;
-    }
-
-    .dark .forgot-link {
-        color: var(--dark-accent);
-    }
-
-    .forgot-link:hover {
-        text-decoration: underline;
-    }
-
-    .btn-full {
-        width: 100%;
-        padding: 1rem;
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-bottom: 1.5rem;
-    }
-
-    .divider {
-        text-align: center;
-        margin: 2rem 0;
-        position: relative;
-        color: var(--text-muted);
-    }
-
-    .dark .divider {
-        color: var(--dark-muted);
-    }
-
-    .divider::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: var(--border-gray);
-    }
-
-    .dark .divider::before {
-        background: var(--dark-border);
-    }
-
-    .divider span {
-        background: var(--white);
-        padding: 0 1rem;
-    }
-
-    .dark .divider span {
-        background: var(--dark-surface);
-    }
-
-    .login-footer {
-        text-align: center;
-        margin-top: 2rem;
-    }
-
-    .login-footer a {
-        color: var(--primary-blue);
-        text-decoration: none;
-        font-weight: 500;
-    }
-
-    .dark .login-footer a {
-        color: var(--dark-accent);
-    }
-
-    .login-footer a:hover {
-        text-decoration: underline;
-    }
-
-    .demo-notice {
-        background: linear-gradient(135deg, var(--wealth-gold), #FCD34D);
-        color: var(--white);
-        padding: 1rem;
-        border-radius: 8px;
-        text-align: center;
-        margin-bottom: 1.5rem;
-        font-size: 0.875rem;
-    }
-
+    /* Responsive Improvements */
     @media (max-width: 480px) {
-        .login-card {
-            padding: 2rem 1.5rem;
-            margin: 1rem;
-        }
+        .login-card { padding: 2rem 1.5rem; margin: 1rem; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<div id="skeleton-login" style="display:none;">
+    <div class="skeleton" style="height: 40px; width: 60%; margin: 2rem auto;"></div>
+    <div class="skeleton" style="height: 30px; width: 80%; margin: 1rem auto;"></div>
+    <div class="skeleton" style="height: 180px; width: 100%; margin: 2rem auto;"></div>
+    <div class="skeleton" style="height: 40px; width: 90%; margin: 1rem auto;"></div>
+</div>
 <div class="login-container">
     <div class="login-card">
         <div class="login-header">
@@ -256,14 +114,33 @@
             <span>or</span>
         </div>
 
-        <button class="btn btn-success btn-full">
+        <a href="/demo" class="btn btn-success btn-full">
             <i class="fas fa-play"></i>
             Try Demo Account
-        </button>
+        </a>
 
         <div class="login-footer">
             <p>Don't have an account? <a href="/register">Sign up here</a></p>
+            <p><a href="/">Back to Home</a></p>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Login skeleton loader and smooth loading
+    document.addEventListener('DOMContentLoaded', function() {
+        document.body.classList.add('login-bg');
+        const loginCard = document.querySelector('.login-card');
+        const skeleton = document.getElementById('skeleton-login');
+        skeleton.style.display = 'block';
+        if(loginCard) loginCard.style.opacity = 0;
+        setTimeout(() => {
+            skeleton.style.display = 'none';
+            document.body.classList.add('loaded');
+            if(loginCard) loginCard.style.opacity = 1;
+        }, 1200); // Simulate loading
+    });
+</script>
 {% endblock %}
