@@ -1,22 +1,25 @@
 from telegram import LabeledPrice, InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
-import os
 from dotenv import load_dotenv
-import requests
-import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from typing import Optional, Tuple
+import os
+import smtplib
 
 load_dotenv()
 
-PROVIDER_TOKEN = os.getenv("PROVIDER_TOKEN")
-SUBSCRIPTION_PRICE_USD = 10.00  # $10.00 in USD
-SYMBOL_CHANGE_PRICE_USD = 1.00  # $1.00 in USD
-CURRENCY_DEFAULT = "USD"
+PROVIDER_TOKEN: Optional[str] = os.getenv("PROVIDER_TOKEN")
+if not PROVIDER_TOKEN:
+    raise ValueError("PROVIDER_TOKEN environment variable not set.")
 
-MPESA_NUMBER = os.getenv("MPESA_NUMBER")
-PAYPAL_LINK = os.getenv("PAYPAL_LINK")
-BANK_DETAILS = os.getenv("BANK_DETAILS")
+SUBSCRIPTION_PRICE_USD: float = 10.00  # $10.00 in USD
+SYMBOL_CHANGE_PRICE_USD: float = 1.00  # $1.00 in USD
+CURRENCY_DEFAULT: str = "USD"
+
+MPESA_NUMBER: Optional[str] = os.getenv("MPESA_NUMBER")
+PAYPAL_LINK: Optional[str] = os.getenv("PAYPAL_LINK")
+BANK_DETAILS: Optional[str] = os.getenv("BANK_DETAILS")
 
 # Map Telegram language/country codes to currency codes
 COUNTRY_TO_CURRENCY = {
@@ -284,43 +287,25 @@ COUNTRY_TO_CURRENCY = {
     "YE": "YER",  # Yemen
     "ZM": "ZMW",  # Zambia
     "ZW": "ZWL",  # Zimbabwe
-    "AX": "EUR",  # Åland Islands
+    "AX": "EUR",
 }
 
 
-def get_currency_for_user(update: Update) -> str:
-    # Try to get country code from Telegram user or fallback to USD
-    country_code = None
-    if update.effective_user and update.effective_user.language_code:
-        # Optionally, use a mapping from language_code to country_code
-        lang = update.effective_user.language_code.lower()
-        if lang == "en":
-            country_code = "US"
-        elif lang == "sw":
-            country_code = "KE"
-        # Add more mappings as needed
-
-    # Optionally, use IP geolocation here for more accuracy
-
+def get_user_currency(country_code: Optional[str]) -> str:
+    if country_code is None:
+        return CURRENCY_DEFAULT
     return COUNTRY_TO_CURRENCY.get(country_code, CURRENCY_DEFAULT)
 
-def convert_price(amount_usd: float, target_currency: str) -> (int, str):
-    """Convert USD price to target currency using exchangerate-api.com (or similar)."""
-    if target_currency == "USD":
-        return int(amount_usd * 100), "USD"
-    try:
-        # Example using exchangerate-api.com (replace with your API key)
-        API_KEY = os.getenv("EXCHANGE_RATE_API_KEY")
-        url = f"https://v6.exchangerate-api.com/v6/{API_KEY}/pair/USD/{target_currency}/{amount_usd}"
-        resp = requests.get(url, timeout=5)
-        if resp.status_code == 200:
-            data = resp.json()
-            converted = data.get("conversion_result", amount_usd)
-            return int(round(converted * 100)), target_currency
-    except Exception:
-        pass
-    # Fallback to USD if conversion fails
-    return int(amount_usd * 100), "USD"
+def convert_price(price_usd: float, currency: str) -> tuple[int, str]:
+    """
+    Convert USD price to the smallest unit of the given currency.
+    For simplicity, this function assumes 1:1 conversion for all currencies except USD.
+    In production, use a real currency conversion API.
+    """
+    if currency == "USD":
+        return int(price_usd * 100), currency
+    # Placeholder: treat all as 1:1 for demo
+    return int(price_usd * 100), currency
 
 async def subscribe_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_currency = get_currency_for_user(update)
