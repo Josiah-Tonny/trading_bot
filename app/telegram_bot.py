@@ -54,7 +54,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 # Error handler
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
     logger.error("Exception while handling an update:", exc_info=context.error)
-
     if isinstance(update, Update) and update.message:
         await update.message.reply_text('An error occurred. Please try again.')
 
@@ -105,14 +104,14 @@ def main() -> None:
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
-    application.add_error_handler(error_handler)
     application.add_handler(CommandHandler("subscribe", subscribe))
     application.add_handler(CommandHandler("status", status))
     application.add_handler(CommandHandler("signals", signals))
     application.add_handler(CommandHandler("change_symbol", change_symbol))
     application.add_handler(CommandHandler("support", support))
     application.add_handler(CommandHandler("terms", terms))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
+    application.add_error_handler(error_handler)
 
     logger.info("Starting bot...")
     application.run_polling()
