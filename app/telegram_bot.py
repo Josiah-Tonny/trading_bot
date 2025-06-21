@@ -13,6 +13,7 @@ import os
 from dotenv import load_dotenv
 from app.handlers.subscribe_command import subscribe_command, subscribe_callback_handler
 from app.handlers.change_symbol import change_symbol_command
+import re
 
 # Load environment variables
 load_dotenv()
@@ -30,28 +31,35 @@ TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
 # /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Welcome to crypto test")
+    if update.message:
+        await update.message.reply_text("Welcome to crypto test")
 
 
 # /help command
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(
-        "/start - Welcome message\n"
-        "/help - Show this help message\n"
-        "/subscribe - Start subscription/payment\n"
-        "/status - Show your subscription status\n"
-        "/signals - Get the latest trading signals\n"
-        "/change_symbol - Change or add a trading symbol\n"
-        "/support - Get support/contact info\n"
-        "/terms - Show terms and disclaimer"
-    )
+    if update.message:
+        await update.message.reply_text(
+            "/start - Welcome message\n"
+            "/help - Show this help message\n"
+            "/subscribe - Start subscription/payment\n"
+            "/status - Show your subscription status\n"
+            "/signals - Get the latest trading signals\n"
+            "/change_symbol - Change or add a trading symbol\n"
+            "/support - Get support/contact info\n"
+            "/terms - Show terms and disclaimer"
+        )
 
 
 # Handle regular messages
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if update.message and update.message.text:
-        text = update.message.text.lower()
-        await update.message.reply_text(f"You said: {text}")
+        text = update.message.text.strip()
+        # Example: Detect Mpesa code (e.g., "QW123ABC456")
+        if re.match(r"^[A-Z0-9]{10,}$", text):
+            # TODO: Verify code and update subscription in DB
+            await update.message.reply_text("Thank you! Your payment code has been received and is under review.")
+        else:
+            await update.message.reply_text(f"You said: {text}")
 
 
 # Error handler
@@ -66,15 +74,17 @@ async def subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(
-        "Your subscription status: [active/inactive/trial]."
-    )
+    if update.message:
+        await update.message.reply_text(
+            "Your subscription status: [active/inactive/trial]."
+        )
 
 
 async def signals(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(
-        "Latest signals:\nEURUSD: BUY\nGBPUSD: SELL\n(More integration coming soon.)"
-    )
+    if update.message:
+        await update.message.reply_text(
+            "Latest signals:\nEURUSD: BUY\nGBPUSD: SELL\n(More integration coming soon.)"
+        )
 
 
 async def change_symbol(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -82,15 +92,17 @@ async def change_symbol(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 
 async def support(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(
-        "For support, contact @YourSupportUsername or email support@example.com"
-    )
+    if update.message:
+        await update.message.reply_text(
+            "For support, contact @YourSupportUsername or email support@example.com"
+        )
 
 
 async def terms(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(
-        "Disclaimer: This is not financial advice. Use at your own risk. See full terms at [your link]."
-    )
+    if update.message:
+        await update.message.reply_text(
+            "Disclaimer: This is not financial advice. Use at your own risk. See full terms at [your link]."
+        )
 
 
 # Main function
