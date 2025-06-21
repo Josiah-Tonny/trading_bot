@@ -2,7 +2,6 @@ from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
     MessageHandler,
-    ContextTypes,
     CallbackContext,
     filters,
     CallbackQueryHandler,
@@ -30,13 +29,13 @@ TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
 
 # /start command
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def start(update: Update, context: CallbackContext) -> None:
     if update.message:
         await update.message.reply_text("Welcome to crypto test")
 
 
 # /help command
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def help_command(update: Update, context: CallbackContext) -> None:
     if update.message:
         await update.message.reply_text(
             "/start - Welcome message\n"
@@ -50,62 +49,65 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         )
 
 
-# Handle regular messages
-async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+# Handle regular messages (e.g., payment codes)
+async def message_handler(update: Update, context: CallbackContext) -> None:
     if update.message and update.message.text:
         text = update.message.text.strip()
-        # Example: Detect Mpesa code (e.g., "QW123ABC456")
+        # Detect Mpesa code (e.g., "QW123ABC456")
         if re.match(r"^[A-Z0-9]{10,}$", text):
-            # TODO: Verify code and update subscription in DB
+            # Store payment code securely in user_data
+            context.user_data['pending_payment_code'] = text
             await update.message.reply_text("Thank you! Your payment code has been received and is under review.")
+            # TODO: Add logic to verify and update subscription in DB
         else:
             await update.message.reply_text(f"You said: {text}")
 
 
 # Error handler
-async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def error_handler(update: object, context: CallbackContext) -> None:
     logger.error("Exception while handling an update:", exc_info=context.error)
     if isinstance(update, Update) and update.message:
         await update.message.reply_text('An error occurred. Please try again.')
 
 
-async def subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def subscribe(update: Update, context: CallbackContext) -> None:
     await subscribe_command(update, context)
 
 
-async def status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def status(update: Update, context: CallbackContext) -> None:
     if update.message:
+        # Example: Retrieve subscription status from user_data
+        status = context.user_data.get('subscription_status', 'inactive')
         await update.message.reply_text(
-            "Your subscription status: [active/inactive/trial]."
+            f"Your subscription status: {status}."
         )
 
 
-async def signals(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def signals(update: Update, context: CallbackContext) -> None:
     if update.message:
         await update.message.reply_text(
             "Latest signals:\nEURUSD: BUY\nGBPUSD: SELL\n(More integration coming soon.)"
         )
 
 
-async def change_symbol(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def change_symbol(update: Update, context: CallbackContext) -> None:
     await change_symbol_command(update, context)
 
 
-async def support(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def support(update: Update, context: CallbackContext) -> None:
     if update.message:
         await update.message.reply_text(
             "For support, contact @YourSupportUsername or email support@example.com"
         )
 
 
-async def terms(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def terms(update: Update, context: CallbackContext) -> None:
     if update.message:
         await update.message.reply_text(
             "Disclaimer: This is not financial advice. Use at your own risk. See full terms at [your link]."
         )
 
 
-# Main function
 def main() -> None:
     if not TOKEN:
         logger.error("No token provided. Please set TELEGRAM_BOT_TOKEN environment variable.")

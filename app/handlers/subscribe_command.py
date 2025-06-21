@@ -3,6 +3,9 @@ from telegram.ext import ContextTypes
 import os
 from dotenv import load_dotenv
 import requests
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 load_dotenv()
 
@@ -336,6 +339,36 @@ async def subscribe_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=reply_markup
         )
 
+def send_invoice_email(to_email: str, amount: float, currency: str):
+    smtp_server = os.getenv("MAIL_SERVER")
+    smtp_port = int(os.getenv("MAIL_PORT", 587))
+    smtp_user = os.getenv("MAIL_USERNAME")
+    smtp_pass = os.getenv("MAIL_PASSWORD")
+    sender = os.getenv("MAIL_DEFAULT_SENDER", smtp_user)
+
+    subject = "Your Trading Bot Subscription Invoice"
+    body = (
+        f"Thank you for subscribing!\n\n"
+        f"Invoice Details:\n"
+        f"Amount: {amount:.2f} {currency}\n"
+        f"If you have any questions, reply to this email."
+    )
+
+    msg = MIMEMultipart()
+    msg["From"] = sender
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "plain"))
+
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            if os.getenv("MAIL_USE_TLS", "True").lower() == "true":
+                server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(sender, to_email, msg.as_string())
+    except Exception as e:
+        print(f"Failed to send invoice email: {e}")
+
 async def subscribe_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -356,6 +389,13 @@ async def subscribe_callback_handler(update: Update, context: ContextTypes.DEFAU
             need_name=True,
             need_email=True,
         )
+        # Send invoice email if user email is available
+        user_email = None
+        if update.effective_user and update.effective_user.email:
+            user_email = update.effective_user.email
+        # If you collect email elsewhere, update this logic accordingly
+        if user_email:
+            send_invoice_email(user_email, price_cents / 100, currency)
     elif data == "pay_mpesa":
         await query.message.reply_text(
             f"Send payment via Mpesa to {MPESA_NUMBER}.\n"
@@ -366,3 +406,12 @@ async def subscribe_callback_handler(update: Update, context: ContextTypes.DEFAU
             f"Deposit to:\n{BANK_DETAILS}\n"
             "After payment, send your transaction reference here for manual verification."
         )
+
+async def successful_payment_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    payment = update.message.successful_payment
+    email = None
+    if payment.order_info and payment.order_info.email:
+        email = payment.order_info.email
+        # Store securely (example: in-memory for session)
+        context.user_data['user_email'] = email
+        # Or save to your database here
