@@ -34,7 +34,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         "/start - Welcome message\n"
-        "/help - Show this help message"
+        "/help - Show this help message\n"
+        "/subscribe - Start subscription/payment\n"
+        "/status - Show your subscription status\n"
+        "/signals - Get the latest trading signals\n"
+        "/change_symbol - Change or add a trading symbol\n"
+        "/support - Get support/contact info\n"
+        "/terms - Show terms and disclaimer"
     )
 
 
@@ -53,6 +59,42 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
         await update.message.reply_text('An error occurred. Please try again.')
 
 
+async def subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(
+        "To subscribe, please visit: [your payment link here] or use Telegram Payments (coming soon)."
+    )
+
+
+async def status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(
+        "Your subscription status: [active/inactive/trial]."
+    )
+
+
+async def signals(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(
+        "Latest signals:\nEURUSD: BUY\nGBPUSD: SELL\n(More integration coming soon.)"
+    )
+
+
+async def change_symbol(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(
+        "To change your trading symbol, please pay the required fee. (Integration coming soon.)"
+    )
+
+
+async def support(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(
+        "For support, contact @YourSupportUsername or email support@example.com"
+    )
+
+
+async def terms(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(
+        "Disclaimer: This is not financial advice. Use at your own risk. See full terms at [your link]."
+    )
+
+
 # Main function
 def main() -> None:
     if not TOKEN:
@@ -65,6 +107,12 @@ def main() -> None:
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
     application.add_error_handler(error_handler)
+    application.add_handler(CommandHandler("subscribe", subscribe))
+    application.add_handler(CommandHandler("status", status))
+    application.add_handler(CommandHandler("signals", signals))
+    application.add_handler(CommandHandler("change_symbol", change_symbol))
+    application.add_handler(CommandHandler("support", support))
+    application.add_handler(CommandHandler("terms", terms))
 
     logger.info("Starting bot...")
     application.run_polling()
