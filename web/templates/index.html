@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+
+{% block title %}TradePro - Professional Trading Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+        color: var(--white);
+        padding: 8rem 0;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+        opacity: 0.3;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero h1 {
+        font-size: 4rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        line-height: 1.1;
+    }
+
+    .hero p {
+        font-size: 1.25rem;
+        margin-bottom: 3rem;
+        opacity: 0.9;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .hero-buttons {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .hero-buttons .btn {
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .features {
+        padding: 8rem 0;
+        background: var(--white);
+    }
+
+    .dark .features {
+        background: var(--dark-surface);
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: 4rem;
+    }
+
+    .section-header h2 {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: var(--charcoal);
+    }
+
+    .dark .section-header h2 {
+        color: var(--dark-text);
+    }
+
+    .section-header p {
+        font-size: 1.2rem;
+        color: var(--text-muted);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 3rem;
+    }
+
+    .feature-card {
+        background: var(--light-gray);
+        padding: 3rem 2rem;
+        border-radius: 16px;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid var(--border-gray);
+    }
+
+    .dark .feature-card {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+    }
+
+    .feature-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        font-size: 2rem;
+    }
+
+    .feature-icon.security {
+        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+        color: var(--white);
+    }
+
+    .feature-icon.growth {
+        background: linear-gradient(135deg, var(--success-green), #22C55E);
+        color: var(--white);
+    }
+
+    .feature-icon.wealth {
+        background: linear-gradient(135deg, var(--wealth-gold), #FCD34D);
+        color: var(--white);
+    }
+
+    .feature-card h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--charcoal);
+    }
+
+    .dark .feature-card h3 {
+        color: var(--dark-text);
+    }
+
+    .feature-card p {
+        color: var(--text-muted);
+        line-height: 1.7;
+    }
+
+    .stats {
+        padding: 6rem 0;
+        background: var(--charcoal);
+        color: var(--white);
+    }
+
+    .dark .stats {
+        background: var(--dark-bg);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 3rem;
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 3.5rem;
+        font-weight: 700;
+        color: var(--success-green);
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .stat-label {
+        font-size: 1.1rem;
+        opacity: 0.8;
+    }
+
+    .cta {
+        padding: 8rem 0;
+        background: linear-gradient(135deg, var(--wealth-gold) 0%, #FCD34D 100%);
+        color: var(--white);
+        text-align: center;
+    }
+
+    .cta h2 {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+
+    .cta p {
+        font-size: 1.2rem;
+        margin-bottom: 3rem;
+        opacity: 0.9;
+    }
+
+    @media (max-width: 768px) {
+        .hero h1 {
+            font-size: 2.5rem;
+        }
+        
+        .hero-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .features-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <h1>Professional Trading<br>Made Simple</h1>
+            <p>Join thousands of traders who trust TradePro for secure, reliable, and profitable trading with advanced tools and real-time market data.</p>
+            <div class="hero-buttons">
+                <a href="/register" class="btn btn-gold">
+                    <i class="fas fa-rocket"></i>
+                    Start Trading Now
+                </a>
+                <a href="/demo" class="btn btn-outline" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); color: white;">
+                    <i class="fas fa-play"></i>
+                    Try Demo Account
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <div class="container">
+        <div class="section-header">
+            <h2>Why Choose TradePro?</h2>
+            <p>Built with security, reliability, and profitability in mind for professional traders</p>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon security">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Bank-Level Security</h3>
+                <p>Your funds and data are protected with enterprise-grade encryption, multi-factor authentication, and regulatory compliance trusted by major financial institutions worldwide.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon growth">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Real-Time Analytics</h3>
+                <p>Advanced charting tools, technical indicators, and real-time market data help you make informed decisions and maximize your trading potential with professional-grade analysis.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon wealth">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <h3>Wealth Building Tools</h3>
+                <p>Comprehensive portfolio management, automated trading strategies, risk management tools, and expert insights to help you build and preserve wealth over time.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="stats">
+    <div class="container">
+        <div class="stats-grid">
+            <div>
+                <span class="stat-number">$2.5B+</span>
+                <div class="stat-label">Trading Volume</div>
+            </div>
+            <div>
+                <span class="stat-number">150K+</span>
+                <div class="stat-label">Active Traders</div>
+            </div>
+            <div>
+                <span class="stat-number">99.9%</span>
+                <div class="stat-label">Uptime</div>
+            </div>
+            <div>
+                <span class="stat-number">24/7</span>
+                <div class="stat-label">Support</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta">
+    <div class="container">
+        <h2>Ready to Start Your Trading Journey?</h2>
+        <p>Join the platform trusted by professional traders worldwide</p>
+        <a href="/register" class="btn btn-primary" style="font-size: 1.2rem; padding: 1.25rem 2.5rem;">
+            <i class="fas fa-user-plus"></i>
+            Create Free Account
+        </a>
+    </div>
+</section>
+{% endblock %}

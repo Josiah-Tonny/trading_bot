@@ -1,0 +1,541 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - TradePro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard {
+        padding: 2rem 0;
+    }
+
+    .dashboard-header {
+        margin-bottom: 2rem;
+    }
+
+    .dashboard-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--charcoal);
+    }
+
+    .dark .dashboard-header h1 {
+        color: var(--dark-text);
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .main-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .sidebar-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-gray);
+    }
+
+    .dark .card-header {
+        border-bottom-color: var(--dark-border);
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--charcoal);
+    }
+
+    .dark .card-title {
+        color: var(--dark-text);
+    }
+
+    /* Portfolio Summary */
+    .portfolio-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .summary-item {
+        text-align: center;
+        padding: 1.5rem;
+        background: var(--white);
+        border: 1px solid var(--border-gray);
+        border-radius: 12px;
+    }
+
+    .dark .summary-item {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+    }
+
+    .summary-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .summary-label {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-bottom: 0.75rem;
+    }
+
+    .dark .summary-label {
+        color: var(--dark-muted);
+    }
+
+    .summary-change {
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+    }
+
+    /* Chart Container */
+    .chart-container {
+        height: 400px;
+        background: var(--light-gray);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dark .chart-container {
+        background: var(--dark-bg);
+    }
+
+    .chart-placeholder {
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    .dark .chart-placeholder {
+        color: var(--dark-muted);
+    }
+
+    /* Positions Table */
+    .positions-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .positions-table th,
+    .positions-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-gray);
+    }
+
+    .dark .positions-table th,
+    .dark .positions-table td {
+        border-bottom-color: var(--dark-border);
+    }
+
+    .positions-table th {
+        background: var(--light-gray);
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .dark .positions-table th {
+        background: var(--dark-bg);
+        color: var(--dark-muted);
+    }
+
+    .symbol-cell {
+        font-weight: 600;
+        color: var(--primary-blue);
+    }
+
+    .dark .symbol-cell {
+        color: var(--dark-accent);
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 1.25rem;
+        border: 1px solid var(--border-gray);
+        border-radius: 12px;
+        background: var(--white);
+        color: var(--charcoal);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .dark .action-btn {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-text);
+    }
+
+    .action-btn:hover {
+        border-color: var(--primary-blue);
+        color: var(--primary-blue);
+        transform: translateY(-2px);
+    }
+
+    .dark .action-btn:hover {
+        border-color: var(--dark-accent);
+        color: var(--dark-accent);
+    }
+
+    /* Watchlist */
+    .watchlist-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-gray);
+        transition: background 0.2s ease;
+    }
+
+    .dark .watchlist-item {
+        border-bottom-color: var(--dark-border);
+    }
+
+    .watchlist-item:hover {
+        background: var(--light-gray);
+    }
+
+    .dark .watchlist-item:hover {
+        background: var(--dark-bg);
+    }
+
+    .watchlist-symbol {
+        font-weight: 600;
+        color: var(--charcoal);
+    }
+
+    .dark .watchlist-symbol {
+        color: var(--dark-text);
+    }
+
+    .watchlist-price {
+        text-align: right;
+    }
+
+    /* News */
+    .news-item {
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--border-gray);
+    }
+
+    .dark .news-item {
+        border-bottom-color: var(--dark-border);
+    }
+
+    .news-title {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--charcoal);
+        line-height: 1.4;
+    }
+
+    .dark .news-title {
+        color: var(--dark-text);
+    }
+
+    .news-meta {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .dark .news-meta {
+        color: var(--dark-muted);
+    }
+
+    @media (max-width: 1024px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .portfolio-summary {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 640px) {
+        .portfolio-summary {
+            grid-template-columns: 1fr;
+        }
+        
+        .quick-actions {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="dashboard">
+        <div class="dashboard-header">
+            <h1>Welcome back, John!</h1>
+            <p class="text-muted">Here's your portfolio overview for December 21, 2024</p>
+        </div>
+
+        <!-- Portfolio Summary -->
+        <div class="portfolio-summary">
+            <div class="summary-item">
+                <div class="summary-value" style="color: var(--primary-blue);">$125,750.50</div>
+                <div class="summary-label">Total Value</div>
+                <div class="summary-change text-success">
+                    <i class="fas fa-arrow-up"></i>
+                    $2,750.50 (2.24%)
+                </div>
+            </div>
+            
+            <div class="summary-item">
+                <div class="summary-value text-success">$45,000.00</div>
+                <div class="summary-label">Buying Power</div>
+                <div class="summary-change text-muted">Available to trade</div>
+            </div>
+            
+            <div class="summary-item">
+                <div class="summary-value text-success">$1,250.75</div>
+                <div class="summary-label">Today's P&L</div>
+                <div class="summary-change text-success">+1.02%</div>
+            </div>
+            
+            <div class="summary-item">
+                <div class="summary-value" style="color: var(--wealth-gold);">8</div>
+                <div class="summary-label">Open Positions</div>
+                <div class="summary-change text-muted">12 total</div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="main-panel">
+                <!-- Portfolio Chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Portfolio Performance</h2>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-sm btn-outline">1D</button>
+                            <button class="btn btn-sm btn-primary">1W</button>
+                            <button class="btn btn-sm btn-outline">1M</button>
+                            <button class="btn btn-sm btn-outline">1Y</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-placeholder">
+                            <i class="fas fa-chart-area" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                            <p style="font-size: 1.1rem;">Portfolio Performance Chart</p>
+                            <p style="font-size: 0.875rem; opacity: 0.7;">Real-time chart integration goes here</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Positions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Current Positions</h2>
+                        <a href="/portfolio" class="btn btn-sm btn-primary">View All</a>
+                    </div>
+                    
+                    <table class="positions-table">
+                        <thead>
+                            <tr>
+                                <th>Symbol</th>
+                                <th>Quantity</th>
+                                <th>Avg Cost</th>
+                                <th>Current Price</th>
+                                <th>Market Value</th>
+                                <th>P&L</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="symbol-cell">AAPL</td>
+                                <td>100</td>
+                                <td class="font-mono">$150.25</td>
+                                <td class="font-mono">$155.80</td>
+                                <td class="font-mono">$15,580.00</td>
+                                <td class="font-mono text-success">
+                                    +$555.00<br>
+                                    <small>(+3.69%)</small>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="btn btn-sm btn-success">Buy</button>
+                                        <button class="btn btn-sm btn-danger">Sell</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="symbol-cell">TSLA</td>
+                                <td>50</td>
+                                <td class="font-mono">$220.50</td>
+                                <td class="font-mono">$215.30</td>
+                                <td class="font-mono">$10,765.00</td>
+                                <td class="font-mono text-danger">
+                                    -$260.00<br>
+                                    <small>(-2.36%)</small>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="btn btn-sm btn-success">Buy</button>
+                                        <button class="btn btn-sm btn-danger">Sell</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="symbol-cell">MSFT</td>
+                                <td>75</td>
+                                <td class="font-mono">$280.00</td>
+                                <td class="font-mono">$285.50</td>
+                                <td class="font-mono">$21,412.50</td>
+                                <td class="font-mono text-success">
+                                    +$412.50<br>
+                                    <small>(+1.96%)</small>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="btn btn-sm btn-success">Buy</button>
+                                        <button class="btn btn-sm btn-danger">Sell</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="sidebar-panel">
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Quick Actions</h3>
+                    </div>
+                    <div class="quick-actions">
+                        <a href="/trade" class="action-btn">
+                            <i class="fas fa-plus"></i>
+                            New Trade
+                        </a>
+                        <a href="/portfolio" class="action-btn">
+                            <i class="fas fa-chart-pie"></i>
+                            Portfolio
+                        </a>
+                        <a href="/watchlist" class="action-btn">
+                            <i class="fas fa-eye"></i>
+                            Watchlist
+                        </a>
+                        <a href="/analysis" class="action-btn">
+                            <i class="fas fa-chart-bar"></i>
+                            Analysis
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Watchlist -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Watchlist</h3>
+                        <a href="/watchlist" class="btn btn-sm btn-outline">Manage</a>
+                    </div>
+                    
+                    <div>
+                        <div class="watchlist-item">
+                            <div>
+                                <div class="watchlist-symbol">AAPL</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Apple Inc.</div>
+                            </div>
+                            <div class="watchlist-price">
+                                <div class="font-mono">$155.80</div>
+                                <div class="text-success" style="font-size: 0.875rem;">+2.45 (+1.60%)</div>
+                            </div>
+                        </div>
+                        
+                        <div class="watchlist-item">
+                            <div>
+                                <div class="watchlist-symbol">GOOGL</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Alphabet Inc.</div>
+                            </div>
+                            <div class="watchlist-price">
+                                <div class="font-mono">$2,750.30</div>
+                                <div class="text-danger" style="font-size: 0.875rem;">-15.20 (-0.55%)</div>
+                            </div>
+                        </div>
+                        
+                        <div class="watchlist-item">
+                            <div>
+                                <div class="watchlist-symbol">AMZN</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Amazon.com Inc.</div>
+                            </div>
+                            <div class="watchlist-price">
+                                <div class="font-mono">$3,380.50</div>
+                                <div class="text-success" style="font-size: 0.875rem;">+45.30 (+1.36%)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Market News -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Market News</h3>
+                    </div>
+                    
+                    <div>
+                        <div class="news-item">
+                            <div class="news-title">Market Opens Higher on Strong Earnings Reports</div>
+                            <div class="news-meta">MarketWatch • 2 hours ago</div>
+                        </div>
+                        
+                        <div class="news-item">
+                            <div class="news-title">Tech Stocks Rally Continues Into Third Week</div>
+                            <div class="news-meta">Bloomberg • 4 hours ago</div>
+                        </div>
+                        
+                        <div class="news-item">
+                            <div class="news-title">Federal Reserve Signals Potential Rate Changes</div>
+                            <div class="news-meta">Reuters • 6 hours ago</div>
+                        </div>
+                        
+                        <div class="news-item">
+                            <div class="news-title">Energy Sector Shows Strong Performance</div>
+                            <div class="news-meta">CNBC • 8 hours ago</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,485 @@
+{% extends "base.html" %}
+
+{% block title %}Portfolio - TradePro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .portfolio-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .portfolio-value {
+        text-align: right;
+    }
+
+    .portfolio-amount {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--primary-blue);
+        margin-bottom: 0.5rem;
+    }
+
+    .dark .portfolio-amount {
+        color: var(--dark-accent);
+    }
+
+    .portfolio-change {
+        font-size: 1.2rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+
+    .portfolio-tabs {
+        display: flex;
+        background: var(--white);
+        border: 1px solid var(--border-gray);
+        border-radius: 8px;
+        padding: 0.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .dark .portfolio-tabs {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+    }
+
+    .portfolio-tab {
+        flex: 1;
+        padding: 0.75rem 1.5rem;
+        text-align: center;
+        border: none;
+        background: transparent;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        color: var(--text-muted);
+        transition: all 0.2s ease;
+    }
+
+    .dark .portfolio-tab {
+        color: var(--dark-muted);
+    }
+
+    .portfolio-tab.active {
+        background: var(--primary-blue);
+        color: var(--white);
+    }
+
+    .dark .portfolio-tab.active {
+        background: var(--dark-accent);
+        color: var(--white);
+    }
+
+    .portfolio-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .positions-card {
+        background: var(--white);
+        border: 1px solid var(--border-gray);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .dark .positions-card {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+    }
+
+    .positions-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-gray);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .dark .positions-header {
+        border-bottom-color: var(--dark-border);
+    }
+
+    .positions-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .positions-table th,
+    .positions-table td {
+        padding: 1rem 1.5rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-gray);
+    }
+
+    .dark .positions-table th,
+    .dark .positions-table td {
+        border-bottom-color: var(--dark-border);
+    }
+
+    .positions-table th {
+        background: var(--light-gray);
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .dark .positions-table th {
+        background: var(--dark-bg);
+        color: var(--dark-muted);
+    }
+
+    .position-symbol {
+        font-weight: 600;
+        color: var(--primary-blue);
+        font-size: 1.1rem;
+    }
+
+    .dark .position-symbol {
+        color: var(--dark-accent);
+    }
+
+    .position-name {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+
+    .dark .position-name {
+        color: var(--dark-muted);
+    }
+
+    .allocation-chart {
+        height: 300px;
+        background: var(--light-gray);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .dark .allocation-chart {
+        background: var(--dark-bg);
+    }
+
+    .performance-metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .metric-item {
+        text-align: center;
+        padding: 1rem;
+        background: var(--light-gray);
+        border-radius: 8px;
+    }
+
+    .dark .metric-item {
+        background: var(--dark-bg);
+    }
+
+    .metric-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .metric-label {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .dark .metric-label {
+        color: var(--dark-muted);
+    }
+
+    .position-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    @media (max-width: 1024px) {
+        .portfolio-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .portfolio-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .portfolio-value {
+            text-align: center;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .performance-metrics {
+            grid-template-columns: 1fr;
+        }
+        
+        .portfolio-tabs {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="padding: 2rem 0;">
+        <div class="portfolio-header">
+            <div>
+                <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">Portfolio</h1>
+                <p class="text-muted">Track your investments and performance</p>
+            </div>
+            <div class="portfolio-value">
+                <div class="portfolio-amount">$125,750.50</div>
+                <div class="portfolio-change text-success">
+                    <i class="fas fa-arrow-up"></i>
+                    +$2,750.50 (+2.24%)
+                </div>
+            </div>
+        </div>
+
+        <div class="portfolio-tabs">
+            <button class="portfolio-tab active">Positions</button>
+            <button class="portfolio-tab">Orders</button>
+            <button class="portfolio-tab">History</button>
+            <button class="portfolio-tab">Performance</button>
+        </div>
+
+        <div class="portfolio-grid">
+            <div class="positions-card">
+                <div class="positions-header">
+                    <h2 style="font-size: 1.25rem; font-weight: 600;">Current Positions</h2>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-sm btn-outline">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                        <button class="btn btn-sm btn-primary">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <table class="positions-table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Quantity</th>
+                            <th>Avg Cost</th>
+                            <th>Current Price</th>
+                            <th>Market Value</th>
+                            <th>P&L</th>
+                            <th>% Change</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="position-symbol">AAPL</div>
+                                <div class="position-name">Apple Inc.</div>
+                            </td>
+                            <td class="font-mono">100</td>
+                            <td class="font-mono">$150.25</td>
+                            <td class="font-mono">$155.80</td>
+                            <td class="font-mono font-semibold">$15,580.00</td>
+                            <td class="font-mono text-success">+$555.00</td>
+                            <td class="text-success font-semibold">+3.69%</td>
+                            <td>
+                                <div class="position-actions">
+                                    <button class="btn btn-sm btn-success">Buy</button>
+                                    <button class="btn btn-sm btn-danger">Sell</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="position-symbol">TSLA</div>
+                                <div class="position-name">Tesla Inc.</div>
+                            </td>
+                            <td class="font-mono">50</td>
+                            <td class="font-mono">$220.50</td>
+                            <td class="font-mono">$215.30</td>
+                            <td class="font-mono font-semibold">$10,765.00</td>
+                            <td class="font-mono text-danger">-$260.00</td>
+                            <td class="text-danger font-semibold">-2.36%</td>
+                            <td>
+                                <div class="position-actions">
+                                    <button class="btn btn-sm btn-success">Buy</button>
+                                    <button class="btn btn-sm btn-danger">Sell</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="position-symbol">MSFT</div>
+                                <div class="position-name">Microsoft Corp.</div>
+                            </td>
+                            <td class="font-mono">75</td>
+                            <td class="font-mono">$280.00</td>
+                            <td class="font-mono">$285.50</td>
+                            <td class="font-mono font-semibold">$21,412.50</td>
+                            <td class="font-mono text-success">+$412.50</td>
+                            <td class="text-success font-semibold">+1.96%</td>
+                            <td>
+                                <div class="position-actions">
+                                    <button class="btn btn-sm btn-success">Buy</button>
+                                    <button class="btn btn-sm btn-danger">Sell</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="position-symbol">GOOGL</div>
+                                <div class="position-name">Alphabet Inc.</div>
+                            </td>
+                            <td class="font-mono">10</td>
+                            <td class="font-mono">$2,800.00</td>
+                            <td class="font-mono">$2,750.30</td>
+                            <td class="font-mono font-semibold">$27,503.00</td>
+                            <td class="font-mono text-danger">-$497.00</td>
+                            <td class="text-danger font-semibold">-1.78%</td>
+                            <td>
+                                <div class="position-actions">
+                                    <button class="btn btn-sm btn-success">Buy</button>
+                                    <button class="btn btn-sm btn-danger">Sell</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="position-symbol">AMZN</div>
+                                <div class="position-name">Amazon.com Inc.</div>
+                            </td>
+                            <td class="font-mono">15</td>
+                            <td class="font-mono">$3,200.00</td>
+                            <td class="font-mono">$3,380.50</td>
+                            <td class="font-mono font-semibold">$50,707.50</td>
+                            <td class="font-mono text-success">+$2,707.50</td>
+                            <td class="text-success font-semibold">+5.64%</td>
+                            <td>
+                                <div class="position-actions">
+                                    <button class="btn btn-sm btn-success">Buy</button>
+                                    <button class="btn btn-sm btn-danger">Sell</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div>
+                <!-- Allocation Chart -->
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div style="padding: 1.5rem; border-bottom: 1px solid var(--border-gray);">
+                        <h3 style="font-size: 1.125rem; font-weight: 600;">Portfolio Allocation</h3>
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <div class="allocation-chart">
+                            <div style="text-align: center; color: var(--text-muted);">
+                                <i class="fas fa-chart-pie" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                                <p>Portfolio Allocation Chart</p>
+                                <p style="font-size: 0.875rem; opacity: 0.7;">Pie chart visualization</p>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div style="width: 12px; height: 12px; background: var(--primary-blue); border-radius: 2px;"></div>
+                                    <span style="font-size: 0.875rem;">AMZN</span>
+                                </div>
+                                <span style="font-weight: 600;">40.3%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div style="width: 12px; height: 12px; background: var(--success-green); border-radius: 2px;"></div>
+                                    <span style="font-size: 0.875rem;">GOOGL</span>
+                                </div>
+                                <span style="font-weight: 600;">21.9%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div style="width: 12px; height: 12px; background: var(--wealth-gold); border-radius: 2px;"></div>
+                                    <span style="font-size: 0.875rem;">MSFT</span>
+                                </div>
+                                <span style="font-weight: 600;">17.0%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div style="width: 12px; height: 12px; background: var(--secondary-blue); border-radius: 2px;"></div>
+                                    <span style="font-size: 0.875rem;">AAPL</span>
+                                </div>
+                                <span style="font-weight: 600;">12.4%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div style="width: 12px; height: 12px; background: var(--danger-red); border-radius: 2px;"></div>
+                                    <span style="font-size: 0.875rem;">TSLA</span>
+                                </div>
+                                <span style="font-weight: 600;">8.6%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="card">
+                    <div style="padding: 1.5rem; border-bottom: 1px solid var(--border-gray);">
+                        <h3 style="font-size: 1.125rem; font-weight: 600;">Performance Metrics</h3>
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <div class="performance-metrics">
+                            <div class="metric-item">
+                                <div class="metric-value text-success">+12.4%</div>
+                                <div class="metric-label">Total Return</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value text-success">+8.7%</div>
+                                <div class="metric-label">YTD Return</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value" style="color: var(--wealth-gold);">1.24</div>
+                                <div class="metric-label">Sharpe Ratio</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value" style="color: var(--primary-blue);">0.85</div>
+                                <div class="metric-label">Beta</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Portfolio tabs functionality
+    document.querySelectorAll('.portfolio-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.portfolio-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Here you would typically load different content based on the selected tab
+            console.log('Selected tab:', this.textContent);
+        });
+    });
+</script>
+{% endblock %}

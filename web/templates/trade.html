@@ -1,0 +1,569 @@
+{% extends "base.html" %}
+
+{% block title %}Trade - TradePro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .trade-container {
+        padding: 2rem 0;
+    }
+
+    .trade-grid {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 2rem;
+    }
+
+    .trade-form {
+        background: var(--white);
+        border: 1px solid var(--border-gray);
+        border-radius: 12px;
+        padding: 2rem;
+    }
+
+    .dark .trade-form {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--charcoal);
+    }
+
+    .dark .form-label {
+        color: var(--dark-text);
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid var(--border-gray);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s ease;
+        background: var(--white);
+        color: var(--charcoal);
+    }
+
+    .dark .form-control {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-text);
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+    }
+
+    .dark .form-control:focus {
+        border-color: var(--dark-accent);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .order-type-tabs {
+        display: flex;
+        background: var(--light-gray);
+        border-radius: 8px;
+        padding: 0.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .dark .order-type-tabs {
+        background: var(--dark-bg);
+    }
+
+    .order-type-tab {
+        flex: 1;
+        padding: 0.75rem;
+        text-align: center;
+        border: none;
+        background: transparent;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        color: var(--text-muted);
+        transition: all 0.2s ease;
+    }
+
+    .dark .order-type-tab {
+        color: var(--dark-muted);
+    }
+
+    .order-type-tab.active {
+        background: var(--white);
+        color: var(--primary-blue);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .dark .order-type-tab.active {
+        background: var(--dark-surface);
+        color: var(--dark-accent);
+    }
+
+    .side-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .side-btn {
+        padding: 1rem;
+        border: 2px solid var(--border-gray);
+        border-radius: 8px;
+        background: var(--white);
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .dark .side-btn {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-text);
+    }
+
+    .side-btn.buy {
+        color: var(--success-green);
+    }
+
+    .side-btn.buy.active {
+        background: var(--success-green);
+        color: var(--white);
+        border-color: var(--success-green);
+    }
+
+    .side-btn.sell {
+        color: var(--danger-red);
+    }
+
+    .side-btn.sell.active {
+        background: var(--danger-red);
+        color: var(--white);
+        border-color: var(--danger-red);
+    }
+
+    .order-summary {
+        background: var(--light-gray);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+    }
+
+    .dark .order-summary {
+        background: var(--dark-bg);
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+    }
+
+    .summary-row:last-child {
+        margin-bottom: 0;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-gray);
+        font-weight: 600;
+    }
+
+    .dark .summary-row:last-child {
+        border-top-color: var(--dark-border);
+    }
+
+    .quote-card {
+        background: var(--white);
+        border: 1px solid var(--border-gray);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .dark .quote-card {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+    }
+
+    .quote-symbol {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-blue);
+        margin-bottom: 0.5rem;
+    }
+
+    .dark .quote-symbol {
+        color: var(--dark-accent);
+    }
+
+    .quote-price {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .quote-change {
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .market-data {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .data-item {
+        text-align: center;
+        padding: 0.75rem;
+        background: var(--light-gray);
+        border-radius: 6px;
+    }
+
+    .dark .data-item {
+        background: var(--dark-bg);
+    }
+
+    .data-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+    }
+
+    .dark .data-label {
+        color: var(--dark-muted);
+    }
+
+    .data-value {
+        font-weight: 600;
+        font-family: monospace;
+    }
+
+    .recent-orders {
+        background: var(--white);
+        border: 1px solid var(--border-gray);
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+
+    .dark .recent-orders {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+    }
+
+    .order-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--border-gray);
+    }
+
+    .dark .order-item {
+        border-bottom-color: var(--dark-border);
+    }
+
+    .order-item:last-child {
+        border-bottom: none;
+    }
+
+    .order-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-filled {
+        background: #ECFDF5;
+        color: var(--success-green);
+    }
+
+    .status-pending {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+
+    .status-cancelled {
+        background: #FEE2E2;
+        color: var(--danger-red);
+    }
+
+    @media (max-width: 1024px) {
+        .trade-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .market-data {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="trade-container">
+        <div style="margin-bottom: 2rem;">
+            <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">Place Order</h1>
+            <p class="text-muted">Execute trades with real-time market data and advanced order types</p>
+        </div>
+
+        <div class="trade-grid">
+            <div>
+                <!-- Quote Card -->
+                <div class="quote-card">
+                    <div class="quote-symbol">AAPL</div>
+                    <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1rem;">Apple Inc.</div>
+                    <div class="quote-price">$155.80</div>
+                    <div class="quote-change text-success">
+                        <i class="fas fa-arrow-up"></i>
+                        +$2.45 (+1.60%)
+                    </div>
+                    
+                    <div class="market-data">
+                        <div class="data-item">
+                            <div class="data-label">Bid</div>
+                            <div class="data-value">$155.75</div>
+                        </div>
+                        <div class="data-item">
+                            <div class="data-label">Ask</div>
+                            <div class="data-value">$155.85</div>
+                        </div>
+                        <div class="data-item">
+                            <div class="data-label">Volume</div>
+                            <div class="data-value">2.5M</div>
+                        </div>
+                        <div class="data-item">
+                            <div class="data-label">Avg Vol</div>
+                            <div class="data-value">3.2M</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trade Form -->
+                <div class="trade-form">
+                    <form>
+                        <div class="form-group">
+                            <label class="form-label">Symbol</label>
+                            <input type="text" class="form-control" value="AAPL" placeholder="Enter symbol">
+                        </div>
+
+                        <div class="side-buttons">
+                            <button type="button" class="side-btn buy active">
+                                <i class="fas fa-arrow-up"></i> Buy
+                            </button>
+                            <button type="button" class="side-btn sell">
+                                <i class="fas fa-arrow-down"></i> Sell
+                            </button>
+                        </div>
+
+                        <div class="order-type-tabs">
+                            <button type="button" class="order-type-tab active">Market</button>
+                            <button type="button" class="order-type-tab">Limit</button>
+                            <button type="button" class="order-type-tab">Stop</button>
+                            <button type="button" class="order-type-tab">Stop Limit</button>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" class="form-control" value="100" placeholder="Number of shares">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Limit Price</label>
+                                <input type="number" class="form-control" placeholder="$0.00" step="0.01" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Stop Price</label>
+                                <input type="number" class="form-control" placeholder="$0.00" step="0.01" disabled>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Time in Force</label>
+                            <select class="form-control">
+                                <option>Day</option>
+                                <option>Good Till Canceled (GTC)</option>
+                                <option>Immediate or Cancel (IOC)</option>
+                                <option>Fill or Kill (FOK)</option>
+                            </select>
+                        </div>
+
+                        <div class="order-summary">
+                            <div class="summary-row">
+                                <span>Shares:</span>
+                                <span>100</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Market Price:</span>
+                                <span>$155.80</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Commission:</span>
+                                <span>$0.00</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Estimated Total:</span>
+                                <span class="font-bold">$15,580.00</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success" style="width: 100%; padding: 1rem; font-size: 1.1rem; font-weight: 600;">
+                            <i class="fas fa-check"></i>
+                            Place Buy Order
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div>
+                <!-- Account Info -->
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div style="margin-bottom: 1rem;">
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Account Summary</h3>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span class="text-muted">Buying Power:</span>
+                        <span class="font-bold text-success">$45,000.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span class="text-muted">Portfolio Value:</span>
+                        <span class="font-bold">$125,750.50</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span class="text-muted">Day P&L:</span>
+                        <span class="font-bold text-success">+$1,250.75</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span class="text-muted">Open Orders:</span>
+                        <span class="font-bold">3</span>
+                    </div>
+                </div>
+
+                <!-- Recent Orders -->
+                <div class="recent-orders">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Recent Orders</h3>
+                    
+                    <div class="order-item">
+                        <div>
+                            <div style="font-weight: 600;">TSLA</div>
+                            <div style="font-size: 0.875rem; color: var(--text-muted);">Buy 50 @ Market</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="order-status status-filled">Filled</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">10:30 AM</div>
+                        </div>
+                    </div>
+                    
+                    <div class="order-item">
+                        <div>
+                            <div style="font-weight: 600;">MSFT</div>
+                            <div style="font-size: 0.875rem; color: var(--text-muted);">Sell 25 @ $285.00</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="order-status status-pending">Pending</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">11:15 AM</div>
+                        </div>
+                    </div>
+                    
+                    <div class="order-item">
+                        <div>
+                            <div style="font-weight: 600;">GOOGL</div>
+                            <div style="font-size: 0.875rem; color: var(--text-muted);">Buy 10 @ $2,750.00</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="order-status status-cancelled">Cancelled</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Yesterday</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Order type tabs
+    document.querySelectorAll('.order-type-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.order-type-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Enable/disable price inputs based on order type
+            const limitInput = document.querySelector('input[placeholder="$0.00"]:first-of-type');
+            const stopInput = document.querySelector('input[placeholder="$0.00"]:last-of-type');
+            
+            if (this.textContent === 'Market') {
+                limitInput.disabled = true;
+                stopInput.disabled = true;
+            } else if (this.textContent === 'Limit') {
+                limitInput.disabled = false;
+                stopInput.disabled = true;
+            } else if (this.textContent === 'Stop') {
+                limitInput.disabled = true;
+                stopInput.disabled = false;
+            } else if (this.textContent === 'Stop Limit') {
+                limitInput.disabled = false;
+                stopInput.disabled = false;
+            }
+        });
+    });
+
+    // Buy/Sell buttons
+    document.querySelectorAll('.side-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.side-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            const submitBtn = document.querySelector('button[type="submit"]');
+            if (this.classList.contains('buy')) {
+                submitBtn.textContent = 'Place Buy Order';
+                submitBtn.className = 'btn btn-success';
+            } else {
+                submitBtn.textContent = 'Place Sell Order';
+                submitBtn.className = 'btn btn-danger';
+            }
+            submitBtn.style.width = '100%';
+            submitBtn.style.padding = '1rem';
+            submitBtn.style.fontSize = '1.1rem';
+            submitBtn.style.fontWeight = '600';
+        });
+    });
+
+    // Update estimated total when quantity changes
+    document.querySelector('input[type="number"]').addEventListener('input', function() {
+        const quantity = this.value || 0;
+        const price = 155.80; // Current market price
+        const total = quantity * price;
+        
+        document.querySelector('.summary-row:last-child span:last-child').textContent = 
+            '$' + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    });
+</script>
+{% endblock %}
