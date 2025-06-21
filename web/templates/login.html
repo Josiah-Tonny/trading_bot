@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Login - TradePro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-container {
+        min-height: calc(100vh - 80px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+        background: linear-gradient(135deg, var(--light-gray) 0%, var(--white) 100%);
+    }
+
+    .dark .login-container {
+        background: linear-gradient(135deg, var(--dark-bg) 0%, var(--dark-surface) 100%);
+    }
+
+    .login-card {
+        background: var(--white);
+        padding: 3rem;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 400px;
+        border: 1px solid var(--border-gray);
+    }
+
+    .dark .login-card {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .login-header h2 {
+        color: var(--primary-blue);
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .dark .login-header h2 {
+        color: var(--dark-accent);
+    }
+
+    .login-header p {
+        color: var(--text-muted);
+    }
+
+    .dark .login-header p {
+        color: var(--dark-muted);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--charcoal);
+    }
+
+    .dark .form-label {
+        color: var(--dark-text);
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.875rem;
+        border: 2px solid var(--border-gray);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        background: var(--white);
+        color: var(--charcoal);
+    }
+
+    .dark .form-control {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-text);
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+    }
+
+    .dark .form-control:focus {
+        border-color: var(--dark-accent);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    .form-check {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-check label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--charcoal);
+        cursor: pointer;
+    }
+
+    .dark .form-check label {
+        color: var(--dark-text);
+    }
+
+    .forgot-link {
+        color: var(--primary-blue);
+        text-decoration: none;
+        font-size: 0.875rem;
+    }
+
+    .dark .forgot-link {
+        color: var(--dark-accent);
+    }
+
+    .forgot-link:hover {
+        text-decoration: underline;
+    }
+
+    .btn-full {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+
+    .divider {
+        text-align: center;
+        margin: 2rem 0;
+        position: relative;
+        color: var(--text-muted);
+    }
+
+    .dark .divider {
+        color: var(--dark-muted);
+    }
+
+    .divider::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--border-gray);
+    }
+
+    .dark .divider::before {
+        background: var(--dark-border);
+    }
+
+    .divider span {
+        background: var(--white);
+        padding: 0 1rem;
+    }
+
+    .dark .divider span {
+        background: var(--dark-surface);
+    }
+
+    .login-footer {
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .login-footer a {
+        color: var(--primary-blue);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .dark .login-footer a {
+        color: var(--dark-accent);
+    }
+
+    .login-footer a:hover {
+        text-decoration: underline;
+    }
+
+    .demo-notice {
+        background: linear-gradient(135deg, var(--wealth-gold), #FCD34D);
+        color: var(--white);
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+        margin-bottom: 1.5rem;
+        font-size: 0.875rem;
+    }
+
+    @media (max-width: 480px) {
+        .login-card {
+            padding: 2rem 1.5rem;
+            margin: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <h2>Welcome Back</h2>
+            <p>Sign in to your TradePro account</p>
+        </div>
+
+        <div class="demo-notice">
+            <i class="fas fa-info-circle"></i>
+            <strong>Demo Account:</strong> Use demo@tradepro.com / demo123
+        </div>
+
+        <form>
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control" placeholder="Enter your email" value="demo@tradepro.com">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-control" placeholder="Enter your password" value="demo123">
+            </div>
+
+            <div class="form-check">
+                <label>
+                    <input type="checkbox" style="margin-right: 0.5rem;">
+                    Remember me
+                </label>
+                <a href="/forgot-password" class="forgot-link">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full">
+                <i class="fas fa-sign-in-alt"></i>
+                Sign In
+            </button>
+        </form>
+
+        <div class="divider">
+            <span>or</span>
+        </div>
+
+        <button class="btn btn-success btn-full">
+            <i class="fas fa-play"></i>
+            Try Demo Account
+        </button>
+
+        <div class="login-footer">
+            <p>Don't have an account? <a href="/register">Sign up here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
