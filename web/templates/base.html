@@ -404,6 +404,12 @@
                     <li><a href="/trade">Trade</a></li>
                     <li><a href="/watchlist">Watchlist</a></li>
                     <li><a href="/analysis">Analysis</a></li>
+                    {% if user_authenticated %}
+                        <li><a href="/logout">Logout</a></li>
+                    {% else %}
+                        <li><a href="/login">Login</a></li>
+                        <li><a href="/register">Register</a></li>
+                    {% endif %}
                 </ul>
                 <!-- Mobile menu -->
                 <div class="mobile-menu" id="mobileMenu">
@@ -413,7 +419,12 @@
                     <a href="/watchlist">Watchlist</a>
                     <a href="/analysis">Analysis</a>
                     <a href="/support">Support/FAQ</a>
-                    <a href="/logout">Logout</a>
+                    {% if user_authenticated %}
+                        <a href="/logout">Logout</a>
+                    {% else %}
+                        <a href="/login">Login</a>
+                        <a href="/register">Register</a>
+                    {% endif %}
                 </div>
                 <div class="header-user-actions" style="display: flex; align-items: center; gap: 1rem; flex-shrink: 0;">
                     <button class="theme-toggle" onclick="toggleTheme()">
