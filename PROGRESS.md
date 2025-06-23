@@ -38,6 +38,7 @@ Files added:
     - app/handlers/change_symbol.py
 
 # Felix
+
 1. Web pages integration
     - base.html
     - index.html
