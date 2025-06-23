@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, session, redirect, url_for
-from app.models.user import get_user_by_id  # to be implemented
+from app.models.user import get_user_by_id
 from app.signals.engine import generate_daily_signals
 
 dashboard_bp = Blueprint('dashboard', __name__)

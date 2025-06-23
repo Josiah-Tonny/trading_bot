@@ -5,8 +5,8 @@ from typing import Callable, TypeVar, Any
 from flask import Response
 from web.dashboard import dashboard_bp
 from app.auth import authenticate, forgot_password, perform_password_reset
-from app.models.user import get_user_by_email, create_user
-from app.models import get_user_by_telegram_id
+from app.models.user import get_user_by_email, create_user ,get_user_by_telegram_id
+import app.models.models as User
 from app.payments import process_stripe_webhook, process_paypal_webhook
 
 load_dotenv()  # Load environment variables from .env
@@ -43,7 +43,7 @@ def login():
         password = request.form.get('password')
         user = authenticate(email=email, password=password)
         if user:
-            session['user'] = user.email or user.telegram_id
+            session['user'] = user.email or user.telegram_user_id
             return redirect(url_for('dashboard'))
         else:
             flash('Invalid credentials', 'danger')
