@@ -3,11 +3,18 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from dotenv import load_dotenv
 from typing import Callable, TypeVar, Any
 from flask import Response
+from web.dashboard import dashboard_bp
+from app.auth import authenticate, forgot_password, perform_password_reset
+from app.models.user import get_user_by_email, create_user
+from app.models import get_user_by_telegram_id
+from app.payments import process_stripe_webhook, process_paypal_webhook
 
 load_dotenv()  # Load environment variables from .env
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key')
+
+app.register_blueprint(dashboard_bp)
 
 # Add this context processor for global template access
 @app.context_processor
@@ -34,14 +41,35 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-        # TODO: Replace with real DB/Telegram bot check
-        if email == 'demo@tradepro.com' and password == 'demo123':
-            session['user'] = email
-            # TODO: Optionally notify/sync with Telegram bot here
+        user = authenticate(email=email, password=password)
+        if user:
+            session['user'] = user.email or user.telegram_id
             return redirect(url_for('dashboard'))
         else:
             flash('Invalid credentials', 'danger')
     return render_template('login.html')
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password_route():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        token = forgot_password(email)
+        if token:
+            flash(f"Password reset link sent to {email}. (Token: {token})", "info")
+        else:
+            flash("Email not found.", "danger")
+    return render_template('forgot_password.html')
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password_route(token):
+    if request.method == 'POST':
+        new_password = request.form.get('password')
+        if perform_password_reset(token, new_password):
+            flash("Password reset successful. Please log in.", "success")
+            return redirect(url_for('login'))
+        else:
+            flash("Invalid or expired token.", "danger")
+    return render_template('reset_password.html', token=token)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -93,8 +121,29 @@ def privacy():
 # Placeholder for Stripe webhook endpoint
 @app.route('/webhook/stripe', methods=['POST'])
 def stripe_webhook():
-    # TODO: Validate and process Stripe webhook events
-    return '', 200
+    payload = request.get_data(as_text=True)
+    sig_header = request.headers.get('Stripe-Signature')
+    event = process_stripe_webhook(payload, sig_header)
+    if event and event['type'] == 'checkout.session.completed':
+        telegram_user_id = event['data']['object']['metadata']['telegram_user_id']
+        user = get_user_by_telegram_id(telegram_user_id)
+        if user:
+            # Activate subscription
+            user.subscription_status = 'active'
+            # ...set expiry, save to DB...
+    return jsonify(success=True)
+
+@app.route('/webhook/paypal', methods=['POST'])
+def paypal_webhook():
+    data = request.json
+    event = process_paypal_webhook(data)
+    if event and event['event_type'] == 'PAYMENT.SALE.COMPLETED':
+        telegram_user_id = event['resource']['custom']
+        user = get_user_by_telegram_id(telegram_user_id)
+        if user:
+            user.subscription_status = 'active'
+            # ...set expiry, save to DB...
+    return jsonify(success=True)
 
 # Placeholder for signal API endpoint
 @app.route('/api/signal', methods=['POST'])

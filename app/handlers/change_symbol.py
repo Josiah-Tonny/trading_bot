@@ -13,7 +13,9 @@ if not PROVIDER_TOKEN:
 SYMBOL_CHANGE_PRICE: int = 100  # $1.00 in cents (USD)
 CURRENCY: str = "USD"
 
-async def change_symbol_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def change_symbol_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     prices = [LabeledPrice("Change Trading Symbol", SYMBOL_CHANGE_PRICE)]
     if update.message:
         await update.message.reply_invoice(

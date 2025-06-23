@@ -20,15 +20,15 @@ Push your initial setup to GitHub so collaborators can pull and contribute.
 ## Next Steps Tony
 
 5. Signal Logic Implementation
-- Implement technical indicators (EMA, MACD, RSI, ATR, etc.) in engine.py.
-- Add logic for multi-timeframe signals (5min, 15min, 4hr, 24hr).
-- Calculate TP/SL and trade amount per user risk profile.
+- Implement technical indicators (EMA, MACD, RSI, ATR, etc.) in engine.py. ✅
+- Add logic for multi-timeframe signals (5min, 15min, 4hr, 24hr). ✅
+- Calculate TP/SL and trade amount per user risk profile/amount for each trade signal or amount to place for each trade. ✅
 
 6. Telegram Bot & Web Integration
-- Add user authentication: link Telegram user_id to web user account.
-- Implement /subscribe, /change_symbol, /status, /signals commands.
-- Integrate payment flow (Telegram Payments or Stripe/PayPal).
-- Set up webhook endpoints (Flask or FastAPI) for payment callbacks.
+- Add user authentication: link Telegram user_id to web user account. ✅
+- Implement /subscribe, /change_symbol, /status, /signals commands. ✅
+- Integrate payment flow (Telegram Payments or Stripe/PayPal). ✅
+- Set up webhook endpoints (Flask or FastAPI) for payment callbacks. ✅
 
 7. Database Models
 - Define models for users, subscriptions, signals, and trade logs in models.py.

@@ -1,18 +1,17 @@
 # data_fetcher.py
 import pandas as pd
 
-def fetch_ohlcv(symbol: str, interval: str = "15m", limit: int = 100) -> pd.DataFrame:
+def fetch_ohlc_data(symbol: str, timeframe: str) -> pd.DataFrame:
     """
-    Fetch OHLCV data for a given symbol and interval.
-    This is a stub. Replace with actual API call (e.g., yfinance, Alpha Vantage, etc.).
+    Fetch OHLC data for the given symbol and timeframe.
+    Returns a pandas DataFrame with columns: ['open', 'high', 'low', 'close', 'volume'].
     """
-    # Example: return a dummy DataFrame
-    data = {
-        "open": [1.0] * limit,
-        "high": [1.1] * limit,
-        "low": [0.9] * limit,
-        "close": [1.05] * limit,
-        "volume": [100] * limit,
-    }
-    df = pd.DataFrame(data)
-    return df
+    # Implement API call here (e.g., Alpha Vantage, Yahoo Finance)
+    # For now, return a dummy DataFrame for testing
+    return pd.DataFrame({
+        'open': [1, 2, 3],
+        'high': [2, 3, 4],
+        'low': [0.5, 1.5, 2.5],
+        'close': [1.5, 2.5, 3.5],
+        'volume': [100, 150, 120]
+    })

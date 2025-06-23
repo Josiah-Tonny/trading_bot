@@ -325,3 +325,52 @@ Monitor: Logging, analytics, support workflows.
 Signal trades	Backtest the MACD+RSI logic on historical 15-minute OHLC data. Tune parameters for win-rate/drawdown.
 Integration	Set up a scheduler (e.g., cron/Celery) to fetch live data, run the generate_signals() function, and send signal messages via Telegram with TP/SL.
 TP/SL Calculations	Use ATR-based multiples for TP/SL placement. Add risk parameters per user profile.
+
+
+
+---
+
+**Explanation of Integration and Types**
+
+### 1. User Authentication & Linking
+- When a user sends `/start`, we extract their Telegram profile and call `authenticate(telegram_profile=...)`.
+- If the user exists (matched by Telegram user_id), we fetch them; otherwise, we create a new user.
+- This links the Telegram user to a web user account, enabling unified access and management.
+
+### 2. Commands
+- `/subscribe`: Triggers a payment flow (see below).
+- `/change_symbol`: Sends a Telegram invoice for symbol change (handled in `change_symbol_command`).
+- `/status`: Shows the user's subscription status and expiry.
+- `/signals`: Returns the latest signals for the user, only if their subscription is active.
+
+### 3. Payment Integration
+- The `/subscribe` command presents payment options (Telegram Payments, Mpesa, PayPal, Bank).
+- If the user chooses "Pay with Card", a Telegram invoice is sent using the correct currency and amount.
+- For Mpesa/Bank, the user is instructed to send their transaction code, which is then verified by `process_payment_code`.
+- Payment success/failure is handled via Telegram's payment callback and/or webhook endpoints (see below).
+
+### 4. Webhook Endpoints (Flask/FastAPI)
+- For Stripe/PayPal, you should set up a webhook endpoint (e.g., `/webhook/payment`) in your Flask or FastAPI app.
+- When a payment event is received, update the user's subscription status in your database.
+- The Telegram bot can be notified (optionally) via a message or by updating the user's status on next interaction.
+
+### 5. Types and Variables
+- `User`: Represents a user, with fields like `telegram_id`, `is_active`, `subscription_expiry`, etc.
+- `Subscription`: Represents a user's subscription, including symbols, timeframes, and capital.
+- `Signal`: Dict with keys like `symbol`, `timeframe`, `action`, `entry`, `tp`, `sl`, etc.
+- Payment-related variables (e.g., `PROVIDER_TOKEN`, `MPESA_NUMBER`) are loaded from `.env`.
+
+### 6. How It Works Together
+- Telegram user interacts with the bot → user is authenticated/linked.
+- User can subscribe, pay, and receive signals via Telegram.
+- Payments are processed via Telegram Payments or external providers (Stripe/PayPal), with webhook callbacks updating the backend.
+- The same user account can be accessed via the web dashboard, using the linked Telegram user_id for seamless experience.
+
+---
+
+**How to Extend**
+- Implement the webhook endpoint in Flask/FastAPI to listen for payment events and update user status.
+- Add logic in your web app to allow users to log in with Telegram (using Telegram login widget or OAuth).
+- Ensure all user actions (signals, payments, symbol changes) are reflected both in Telegram and on the web dashboard.
+
+This structure ensures robust integration between Telegram, payment providers, and your web backend, with clear type usage and
