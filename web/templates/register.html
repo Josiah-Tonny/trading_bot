@@ -541,7 +541,6 @@
             <p>Join thousands of traders on TradePro</p>
         </div>
 
-        <!-- Registration Method Tabs -->
         <div class="registration-tabs">
             <button class="tab-button active" onclick="switchTab('email')" id="emailTab">
                 <i class="fas fa-envelope"></i>
@@ -553,59 +552,34 @@
             </button>
         </div>
 
-        <!-- Email Registration Tab -->
         <div id="emailContent" class="tab-content active">
-            <form method="POST" id="registerForm">
-                {{ form.hidden_tag() }}
-                
-                <!-- Personal Information -->
+            <form action="/register" method="POST" id="registerForm">
                 <div class="form-row">
                     <div class="form-group">
-                        {{ form.first_name.label(class="form-label") }}
-                        {{ form.first_name(class="form-control") }}
-                        {% if form.first_name.errors %}
-                            <div class="form-help text-danger">
-                                {% for error in form.first_name.errors %}{{ error }}{% endfor %}
-                            </div>
-                        {% endif %}
+                        <label class="form-label">First Name</label>
+                        <input type="text" name="first_name" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        {{ form.last_name.label(class="form-label") }}
-                        {{ form.last_name(class="form-control") }}
-                        {% if form.last_name.errors %}
-                            <div class="form-help text-danger">
-                                {% for error in form.last_name.errors %}{{ error }}{% endfor %}
-                            </div>
-                        {% endif %}
+                        <label class="form-label">Last Name</label>
+                        <input type="text" name="last_name" class="form-control" required>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    {{ form.email.label(class="form-label") }}
-                    {{ form.email(class="form-control") }}
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" required>
                     <div class="form-help">We'll use this for account notifications and security alerts</div>
-                    {% if form.email.errors %}
-                        <div class="form-help text-danger">
-                            {% for error in form.email.errors %}{{ error }}{% endfor %}
-                        </div>
-                    {% endif %}
                 </div>
 
                 <div class="form-group">
-                    {{ form.phone.label(class="form-label") }}
-                    {{ form.phone(class="form-control") }}
+                    <label class="form-label">Phone</label>
+                    <input type="tel" name="phone" class="form-control">
                     <div class="form-help">Optional: For two-factor authentication and account recovery</div>
-                    {% if form.phone.errors %}
-                        <div class="form-help text-danger">
-                            {% for error in form.phone.errors %}{{ error }}{% endfor %}
-                        </div>
-                    {% endif %}
                 </div>
 
-                <!-- Password Section -->
                 <div class="form-group">
-                    {{ form.password.label(class="form-label") }}
-                    {{ form.password(class="form-control", id="password") }}
+                    <label class="form-label">Password</label>
+                    <input type="password" name="password" id="password" class="form-control" required>
                     <div class="password-strength">
                         <div class="strength-bar">
                             <div class="strength-fill" id="strengthFill"></div>
@@ -613,48 +587,40 @@
                         <div class="strength-text" id="strengthText">Password strength: Weak</div>
                     </div>
                     <div class="form-help">Must be at least 8 characters with uppercase, lowercase, number, and symbol</div>
-                    {% if form.password.errors %}
-                        <div class="form-help text-danger">
-                            {% for error in form.password.errors %}{{ error }}{% endfor %}
-                        </div>
-                    {% endif %}
                 </div>
 
                 <div class="form-group">
-                    {{ form.confirm_password.label(class="form-label") }}
-                    {{ form.confirm_password(class="form-control", id="confirmPassword") }}
-                    {% if form.confirm_password.errors %}
-                        <div class="form-help text-danger">
-                            {% for error in form.confirm_password.errors %}{{ error }}{% endfor %}
-                        </div>
-                    {% endif %}
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" name="confirm_password" id="confirmPassword" class="form-control" required>
                 </div>
 
-                <!-- Risk Tolerance -->
                 <div class="form-group">
-                    {{ form.risk_tolerance.label(class="form-label") }}
+                    <label class="form-label">Risk Tolerance</label>
                     <div class="risk-tolerance">
-                        {% for subfield in form.risk_tolerance %}
-                            <div class="risk-option">
-                                {{ subfield(id=subfield.id) }}
-                                <label for="{{ subfield.id }}" class="risk-label">
-                                    {% if subfield.data == 'conservative' %}
-                                        <div class="risk-title">Conservative</div>
-                                        <div class="risk-desc">Prefer stable, low-risk investments</div>
-                                    {% elif subfield.data == 'moderate' %}
-                                        <div class="risk-title">Moderate</div>
-                                        <div class="risk-desc">Balanced approach to risk and return</div>
-                                    {% elif subfield.data == 'aggressive' %}
-                                        <div class="risk-title">Aggressive</div>
-                                        <div class="risk-desc">Comfortable with high-risk investments</div>
-                                    {% endif %}
-                                </label>
-                            </div>
-                        {% endfor %}
+                        <div class="risk-option">
+                            <input type="radio" name="risk_tolerance" value="conservative" id="conservative" required>
+                            <label for="conservative" class="risk-label">
+                                <div class="risk-title">Conservative</div>
+                                <div class="risk-desc">Prefer stable, low-risk investments</div>
+                            </label>
+                        </div>
+                        <div class="risk-option">
+                            <input type="radio" name="risk_tolerance" value="moderate" id="moderate">
+                            <label for="moderate" class="risk-label">
+                                <div class="risk-title">Moderate</div>
+                                <div class="risk-desc">Balanced approach to risk and return</div>
+                            </label>
+                        </div>
+                        <div class="risk-option">
+                            <input type="radio" name="risk_tolerance" value="aggressive" id="aggressive">
+                            <label for="aggressive" class="risk-label">
+                                <div class="risk-title">Aggressive</div>
+                                <div class="risk-desc">Comfortable with high-risk investments</div>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Security Features -->
                 <div class="security-features">
                     <div class="security-item">
                         <div class="security-icon encryption">
@@ -676,17 +642,11 @@
                     </div>
                 </div>
 
-                <!-- Terms and Conditions -->
                 <div class="terms-section">
                     <div class="terms-check">
-                        {{ form.terms_accepted() }}
-                        {{ form.terms_accepted.label() }}
+                        <input type="checkbox" name="terms_accepted" id="terms_accepted" required>
+                        <label for="terms_accepted">I accept the terms and conditions</label>
                     </div>
-                    {% if form.terms_accepted.errors %}
-                        <div class="form-help text-danger">
-                            {% for error in form.terms_accepted.errors %}{{ error }}{% endfor %}
-                        </div>
-                    {% endif %}
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-full">
@@ -696,7 +656,6 @@
             </form>
         </div>
 
-        <!-- Telegram Login Tab -->
         <div id="telegramContent" class="tab-content">
             <div class="telegram-login-section">
                 <div class="telegram-benefits">
@@ -744,7 +703,6 @@
                     </div>
                 </div>
 
-                <!-- Telegram Login Widget -->
                 <div class="telegram-login-widget">
                     <script async src="https://telegram.org/js/telegram-widget.js?22" 
                             data-telegram-login="{{ config.TELEGRAM_BOT_USERNAME or 'TradePro_Bot' }}" 
@@ -755,7 +713,6 @@
                     </script>
                 </div>
 
-                <!-- Fallback Button -->
                 <a href="https://t.me/{{ config.TELEGRAM_BOT_USERNAME or 'TradePro_Bot' }}?start=register" 
                    class="telegram-fallback" 
                    target="_blank"
@@ -780,7 +737,7 @@
         </div>
 
         <div class="register-footer">
-            <p>Already have an account? <a href="{{ url_for('auth.login') }}">Sign in here</a></p>
+            <p>Already have an account? <a href="/login">Sign in here</a></p>
             <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-muted);">
                 By creating an account, you acknowledge that you have read and understood our risk disclosures.
             </p>
@@ -791,52 +748,41 @@
 
 {% block extra_js %}
 <script>
-    // Tab switching functionality
     function switchTab(tabName) {
-        // Hide all tab contents
         document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.remove('active');
         });
         
-        // Remove active class from all tab buttons
         document.querySelectorAll('.tab-button').forEach(button => {
             button.classList.remove('active');
         });
         
-        // Show selected tab content
         document.getElementById(tabName + 'Content').classList.add('active');
         document.getElementById(tabName + 'Tab').classList.add('active');
     }
 
-    // Password strength checker
     function checkPasswordStrength(password) {
         let strength = 0;
         let feedback = [];
 
-        // Length check
         if (password.length >= 8) strength += 1;
         else feedback.push('at least 8 characters');
 
-        // Uppercase check
         if (/[A-Z]/.test(password)) strength += 1;
         else feedback.push('uppercase letter');
 
-        // Lowercase check
         if (/[a-z]/.test(password)) strength += 1;
         else feedback.push('lowercase letter');
 
-        // Number check
         if (/\d/.test(password)) strength += 1;
         else feedback.push('number');
 
-        // Special character check
         if (/[^A-Za-z0-9]/.test(password)) strength += 1;
         else feedback.push('special character');
 
         return { strength, feedback };
     }
 
-    // Update password strength indicator
     const passwordInput = document.getElementById('password');
     if (passwordInput) {
         passwordInput.addEventListener('input', function() {
@@ -845,7 +791,6 @@
             const strengthFill = document.getElementById('strengthFill');
             const strengthText = document.getElementById('strengthText');
 
-            // Remove existing classes
             strengthFill.className = 'strength-fill';
             
             if (password.length === 0) {
@@ -853,7 +798,6 @@
                 return;
             }
 
-            // Add appropriate class based on strength
             if (strength <= 2) {
                 strengthFill.classList.add('strength-weak');
                 strengthText.textContent = 'Password strength: Weak';
@@ -878,7 +822,6 @@
         });
     }
 
-    // Password confirmation validation
     const confirmPasswordInput = document.getElementById('confirmPassword');
     if (confirmPasswordInput) {
         confirmPasswordInput.addEventListener('input', function() {
@@ -893,7 +836,6 @@
         });
     }
 
-    // Check if Telegram widget loaded, show fallback if not
     setTimeout(function() {
         const telegramWidget = document.querySelector('iframe[src*="oauth.telegram.org"]');
         const fallbackButton = document.querySelector('.telegram-fallback');
@@ -903,7 +845,6 @@
         }
     }, 3000);
 
-    // Handle URL parameters for auto-switching tabs
     const urlParams = new URLSearchParams(window.location.search);
     const method = urlParams.get('method');
     if (method === 'telegram') {

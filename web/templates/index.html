@@ -234,11 +234,11 @@
             <h1>Professional Trading<br>Made Simple</h1>
             <p>Join thousands of traders who trust TradePro for secure, reliable, and profitable trading with advanced tools and real-time market data.</p>
             <div class="hero-buttons">
-                <a href="{{ url_for('auth.register') }}" class="btn btn-gold">
+                <a href="{{ url_for('register') }}" class="btn btn-gold">
                     <i class="fas fa-rocket"></i>
                     Start Trading Now
                 </a>
-                <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); color: white;">
+                <a href="{{ url_for('dashboard.profile') }}" class="btn btn-outline" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); color: white;">
                     <i class="fas fa-play"></i>
                     Try Demo Account
                 </a>
@@ -309,7 +309,7 @@
     <div class="container">
         <h2>Ready to Start Your Trading Journey?</h2>
         <p>Join the platform trusted by professional traders worldwide</p>
-        <a href="{{ url_for('auth.register') }}" class="btn btn-primary" style="font-size: 1.2rem; padding: 1.25rem 2.5rem;">
+        <a href="{{ url_for('register') }}" class="btn btn-primary" style="font-size: 1.2rem; padding: 1.25rem 2.5rem;">
             <i class="fas fa-user-plus"></i>
             Create Free Account
         </a>

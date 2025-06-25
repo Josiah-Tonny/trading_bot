@@ -1,15 +1,58 @@
 import os
+import sys
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from dotenv import load_dotenv
 from typing import Callable, TypeVar, Any
 from flask import Response
+
+# Load environment variables first
+load_dotenv()
+
+# Add the project root to Python path
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
+
+# Import and create tables automatically
+try:
+    from app.models.models import create_tables
+    print("Initializing database...")
+    create_tables()
+    
+    # Create sample user immediately
+    try:
+        from app.models.user import UserService
+        with UserService() as service:
+            existing_user = service.get_user_by_email("test@example.com")
+            if not existing_user:
+                user = service.create_user(
+                    email="test@example.com",
+                    password="password123"
+                )
+                print(f"✅ Created sample user: {user.email}")
+                print("   Login with: test@example.com / password123")
+            else:
+                print("✅ Sample user already exists")
+    except Exception as e:
+        print(f"Note: Could not create sample user: {e}")
+        
+except Exception as e:
+    print(f"Warning: Database initialization failed: {e}")
+
+# Absolute imports
 from web.dashboard import dashboard_bp
 from app.auth import authenticate, forgot_password, perform_password_reset
-from app.models.user import get_user_by_email, create_user ,get_user_by_telegram_id
+from app.models.user import get_user_by_email, create_user, get_user_by_telegram_id
 import app.models.models as User
-from app.payments import process_stripe_webhook, process_paypal_webhook
 
-load_dotenv()  # Load environment variables from .env
+# Handle payment imports gracefully
+try:
+    from app.payments import process_stripe_webhook, process_paypal_webhook
+except ImportError:
+    # Placeholder functions if payments module doesn't exist yet
+    def process_stripe_webhook(payload, sig_header):
+        return None
+    def process_paypal_webhook(data):
+        return None
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key')
@@ -43,8 +86,9 @@ def login():
         password = request.form.get('password')
         user = authenticate(email=email, password=password)
         if user:
-            session['user'] = user.email or user.telegram_user_id
-            return redirect(url_for('dashboard'))
+            session['user'] = user.email or str(user.telegram_user_id)
+            session['user_id'] = user.id  # Add user_id to session
+            return redirect(url_for('dashboard.dashboard'))  # Use blueprint route
         else:
             flash('Invalid credentials', 'danger')
     return render_template('login.html')
@@ -76,25 +120,24 @@ def register():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-        # TODO: Save user to DB and/or notify Telegram bot
-        flash('Registration successful. Please log in.', 'success')
-        return redirect(url_for('login'))
+        try:
+            user = create_user(email=email, password=password)
+            flash('Registration successful. Please log in.', 'success')
+            return redirect(url_for('login'))
+        except ValueError as e:
+            flash(str(e), 'danger')
     return render_template('register.html')
 
 @app.route('/logout')
 def logout():
     session.pop('user', None)
+    session.pop('user_id', None)
     return redirect(url_for('index'))
 
 @app.route('/signals')
 @login_required
 def signals():
     return render_template('signals.html')
-
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    return render_template('dashboard.html')
 
 @app.route('/portfolio')
 @login_required
@@ -108,15 +151,15 @@ def trade():
 
 @app.route('/support')
 def support():
-    return render_template('support.html')  # Create this template
+    return render_template('support.html')
 
 @app.route('/terms')
 def terms():
-    return render_template('terms.html')  # Create this template
+    return render_template('terms.html')
 
 @app.route('/privacy')
 def privacy():
-    return render_template('privacy.html')  # Create this template
+    return render_template('privacy.html')
 
 # Placeholder for Stripe webhook endpoint
 @app.route('/webhook/stripe', methods=['POST'])
