@@ -708,7 +708,7 @@
                             data-telegram-login="{{ config.TELEGRAM_BOT_USERNAME or 'TradePro_Bot' }}" 
                             data-size="large" 
                             data-radius="8"
-                            data-auth-url="{{ url_for('auth.telegram_callback', _external=True) }}" 
+                            data-auth-url="{{ url_for('terms', _external=True) }}" 
                             data-request-access="write">
                     </script>
                 </div>

@@ -38,9 +38,9 @@ try:
 except Exception as e:
     print(f"Warning: Database initialization failed: {e}")
 
-# Absolute imports
+# Absolute imports      
 from web.dashboard import dashboard_bp
-from app.auth import authenticate, forgot_password, perform_password_reset
+from app.auth import authenticate
 from app.models.user import get_user_by_email, create_user, get_user_by_telegram_id
 import app.models.models as User
 
@@ -56,6 +56,8 @@ except ImportError:
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key')
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_TYPE'] = 'filesystem'
 
 app.register_blueprint(dashboard_bp)
 
@@ -84,11 +86,16 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-        user = authenticate(email=email, password=password)
+        
+        from app.models.user import UserService
+        with UserService() as service:
+            user = service.authenticate_user(email, password)
+            
         if user:
             session['user'] = user.email or str(user.telegram_user_id)
-            session['user_id'] = user.id  # Add user_id to session
-            return redirect(url_for('dashboard.dashboard'))  # Use blueprint route
+            session['user_id'] = user.id
+            print(f"LOGIN DEBUG - Session after setting: {dict(session)}")  # Add this debug line
+            return redirect('/dashboard')
         else:
             flash('Invalid credentials', 'danger')
     return render_template('login.html')
