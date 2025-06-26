@@ -1,5 +1,5 @@
-from sqlalchemy import String, BigInteger, ForeignKey, DateTime, Boolean, Float, Text
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import String, BigInteger, ForeignKey, DateTime, Boolean, Float, Text, create_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
 from datetime import datetime
 from typing import Optional, List
 import os
@@ -67,17 +67,51 @@ class Subscription(Base):
 
 # Database setup
 DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///trading_bot.db')
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-def create_tables():
-    """Create all tables"""
-    Base.metadata.create_all(bind=engine)
+try:
+    engine = create_engine(DATABASE_URL, echo=False)  # Set echo=False to reduce noise
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    
+    def create_tables():
+        """Create all tables"""
+        try:
+            Base.metadata.create_all(bind=engine)
+            print("✅ Database tables created/verified successfully!")
+            return True
+        except Exception as e:
+            print(f"❌ Error creating tables: {e}")
+            return False
 
-def get_db():
-    """Get database session"""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    def get_db():
+        """Get database session"""
+        db = SessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
+
+    # Test database connection
+    def test_connection():
+        """Test database connection"""
+        try:
+            with engine.connect() as conn:
+                conn.execute("SELECT 1")
+            return True
+        except Exception as e:
+            print(f"Database connection test failed: {e}")
+            return False
+
+except Exception as e:
+    print(f"❌ Database setup failed: {e}")
+    
+    # Create fallback functions
+    def create_tables():
+        print("❌ Cannot create tables - database not initialized")
+        return False
+    
+    def get_db():
+        print("❌ Cannot get database session - database not initialized")
+        return None
+    
+    def test_connection():
+        return False

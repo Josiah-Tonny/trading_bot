@@ -7,6 +7,7 @@ from app.models.user import (
     User,
 )
 from typing import Optional, Dict, Any
+import hashlib
 
 
 def authenticate(
@@ -18,13 +19,22 @@ def authenticate(
         telegram_id = telegram_profile["id"]
         user = get_user_by_telegram_id(telegram_id)
         if not user:
-            user = create_user(telegram_user_id=telegram_id, username=telegram_profile.get("username"))
+            user = create_user(telegram_id=telegram_id, username=telegram_profile.get("username"))
         return user
     elif email and password:
         user = get_user_by_email(email)
-        if user and user.password == password:  # Replace with hash check in prod
+        # Fix password checking to use hash
+        if user and hasattr(user, 'password_hash') and user.password_hash == _hash_password(password):
+            return user
+        # Fallback for plain text passwords (remove in production)
+        elif user and hasattr(user, 'password') and user.password == password:
             return user
     return None
+
+
+def _hash_password(password: str) -> str:
+    """Hash password using SHA-256 (use bcrypt in production)"""
+    return hashlib.sha256(password.encode()).hexdigest()
 
 
 def forgot_password(email: str) -> Optional[str]:

@@ -16,15 +16,16 @@ class UserService:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.db.close()
+        
+        
+    def get_user_by_id(self, user_id: int) -> Optional[User]:
+        return self.db.query(User).filter(User.id == user_id).first()
 
     def get_user_by_email(self, email: str) -> Optional[User]:
         return self.db.query(User).filter(User.email == email.lower()).first()
 
     def get_user_by_telegram_id(self, telegram_id: int) -> Optional[User]:
         return self.db.query(User).filter(User.telegram_user_id == telegram_id).first()
-
-    def get_user_by_id(self, user_id: int) -> Optional[User]:
-        return self.db.query(User).filter(User.id == user_id).first()
 
     def create_user(self, email: Optional[str] = None, password: Optional[str] = None, 
                    telegram_id: Optional[int] = None, **kwargs) -> User:
@@ -139,3 +140,15 @@ def create_user(email: Optional[str] = None, password: Optional[str] = None,
 def activate_user_subscription(user_id: int, duration_days: int = 30) -> Optional[User]:
     with UserService() as service:
         return service.activate_user_subscription(user_id, duration_days)
+
+def get_user_by_id(user_id: int) -> Optional[User]:
+    with UserService() as service:
+        return service.get_user_by_id(user_id)
+
+def set_password_reset_token(email: str) -> Optional[str]:
+    with UserService() as service:
+        return service.set_password_reset_token(email)
+    
+def reset_password(token: str, new_password: str) -> bool:
+    with UserService() as service:
+        return service.reset_password(token, new_password)
