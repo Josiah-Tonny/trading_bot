@@ -59,13 +59,67 @@ class SignalEngine:
 
     def calculate_bollinger_bands(
         self, period: int = 20, num_std: int = 2
-    ) -> tuple[pd.Series, pd.Series]:
+    ) -> tuple[pd.Series, pd.Series, pd.Series]:
         """Bollinger Bands"""
         sma = self.data['close'].rolling(period).mean()
         std = self.data['close'].rolling(period).std()
         upper = sma + (std * num_std)
         lower = sma - (std * num_std)
-        return upper, lower
+        return upper, lower, sma
+
+    def calculate_adx(self, period: int = 14) -> pd.Series:
+        """Average Directional Index"""
+        high = self.data['high']
+        low = self.data['low']
+        close = self.data['close']
+        
+        # Calculate True Range
+        tr = pd.DataFrame(index=close.index)
+        tr['h-l'] = high - low
+        tr['h-pc'] = abs(high - close.shift())
+        tr['l-pc'] = abs(low - close.shift())
+        tr['tr'] = tr[['h-l', 'h-pc', 'l-pc']].max(axis=1)
+        
+        # Calculate Directional Movement
+        up_move = high.diff()
+        down_move = low.diff()
+        
+        dm_plus = pd.Series(np.where(
+            (up_move > down_move) & (up_move > 0),
+            up_move,
+            0
+        ))
+        
+        dm_minus = pd.Series(np.where(
+            (down_move > up_move) & (down_move > 0),
+            down_move,
+            0
+        ))
+        
+        # Calculate Smoothed Values
+        tr_ewm = tr['tr'].ewm(span=period, adjust=False).mean()
+        dm_plus_ewm = dm_plus.ewm(span=period, adjust=False).mean()
+        dm_minus_ewm = dm_minus.ewm(span=period, adjust=False).mean()
+        
+        # Calculate Directional Indicators
+        di_plus = (dm_plus_ewm / tr_ewm) * 100
+        di_minus = (dm_minus_ewm / tr_ewm) * 100
+        
+        # Calculate ADX
+        dx = abs(di_plus - di_minus) / (di_plus + di_minus) * 100
+        adx = dx.ewm(span=period, adjust=False).mean()
+        return adx
+
+    def calculate_stochastic_oscillator(
+        self, period: int = 14, k_period: int = 3, d_period: int = 3
+    ) -> tuple[pd.Series, pd.Series]:
+        """Stochastic Oscillator"""
+        high = self.data['high'].rolling(period).max()
+        low = self.data['low'].rolling(period).min()
+        k = ((self.data['close'] - low) / (high - low)) * 100
+        k = k.rolling(k_period).mean()
+        d = k.rolling(d_period).mean()
+        return k, d
 
     # Signal Generation --------------------------------------------------------
     def generate_signal(
@@ -74,18 +128,29 @@ class SignalEngine:
         """Generate trade signal with TP/SL and position size based on risk profile"""
         # Calculate indicators
         self.data['ema20'] = self.calculate_ema(20)
+        self.data['ema50'] = self.calculate_ema(50)
+        self.data['ema200'] = self.calculate_ema(200)
         macd_line, signal_line, hist = self.calculate_macd()
         self.data['rsi'] = self.calculate_rsi()
+        self.data['adx'] = self.calculate_adx()
+        k, d = self.calculate_stochastic_oscillator()
+        self.data['stoch_k'] = k
+        self.data['stoch_d'] = d
         self.data['atr'] = self.calculate_atr()
+        upper_bb, lower_bb, bb_sma = self.calculate_bollinger_bands()
         
         # Get latest values
         current_close = self.data['close'].iloc[-1]
         current_rsi = self.data['rsi'].iloc[-1]
+        current_adx = self.data['adx'].iloc[-1]
+        current_stoch_k = self.data['stoch_k'].iloc[-1]
+        current_stoch_d = self.data['stoch_d'].iloc[-1]
         current_atr = self.data['atr'].iloc[-1]
-        prev_macd = macd_line.iloc[-2]
-        current_macd = macd_line.iloc[-1]
-        prev_signal = signal_line.iloc[-2]
-        current_signal = signal_line.iloc[-1]
+        
+        # Get EMA values
+        ema20 = self.data['ema20'].iloc[-1]
+        ema50 = self.data['ema50'].iloc[-1]
+        ema200 = self.data['ema200'].iloc[-1]
         
         # Initialize signal
         signal = {
@@ -99,8 +164,11 @@ class SignalEngine:
             'timestamp': pd.Timestamp.now(),
             'indicators': {
                 'rsi': round(current_rsi, 2),
+                'adx': round(current_adx, 2),
+                'stoch_k': round(current_stoch_k, 2),
+                'stoch_d': round(current_stoch_d, 2),
                 'atr': round(current_atr, 5),
-                'macd': round(current_macd, 5)
+                'macd': round(macd_line.iloc[-1], 5)
             }
         }
         
@@ -130,12 +198,36 @@ class SignalEngine:
             tp_mults = [1, 2, 3]
             sl_mult = 1
 
-        # MACD crossover strategy
-        bull_crossover = (prev_macd < prev_signal) and (current_macd > current_signal)
-        bear_crossover = (prev_macd > prev_signal) and (current_macd < current_signal)
+        # Multiple confirmation points for buy signal
+        buy_conditions = [
+            # Trend confirmation
+            current_close > ema20 and ema20 > ema50 and ema50 > ema200,
+            # Momentum confirmation
+            current_rsi > 30 and current_rsi < 70,
+            current_stoch_k > 20 and current_stoch_k < 80,
+            current_stoch_k > current_stoch_d,
+            # Trend strength
+            current_adx > 25,
+            # Price above Bollinger Bands
+            current_close > bb_sma
+        ]
+        
+        # Multiple confirmation points for sell signal
+        sell_conditions = [
+            # Trend confirmation
+            current_close < ema20 and ema20 < ema50 and ema50 < ema200,
+            # Momentum confirmation
+            current_rsi > 30 and current_rsi < 70,
+            current_stoch_k > 20 and current_stoch_k < 80,
+            current_stoch_k < current_stoch_d,
+            # Trend strength
+            current_adx > 25,
+            # Price below Bollinger Bands
+            current_close < bb_sma
+        ]
 
-        # Generate signals
-        if bull_crossover and current_rsi < 65:
+        # Generate signals with multiple confirmations
+        if all(buy_conditions):
             signal['action'] = 'buy'
             signal['sl'] = current_close - (current_atr * sl_mult)
             signal['tp'] = [
@@ -143,8 +235,15 @@ class SignalEngine:
                 current_close + (current_atr * tp_mults[1]),
                 current_close + (current_atr * tp_mults[2])
             ]
-            signal['confidence'] = min(90, 70 + (30 - current_rsi)/2)
-        elif bear_crossover and current_rsi > 35:
+            # Calculate confidence based on multiple factors
+            confidence = 0
+            if current_rsi > 50: confidence += 20
+            if current_stoch_k > 50: confidence += 20
+            if current_adx > 25: confidence += 20
+            if current_close > ema20: confidence += 20
+            if current_close > ema50: confidence += 20
+            signal['confidence'] = min(100, confidence)
+        elif all(sell_conditions):
             signal['action'] = 'sell'
             signal['sl'] = current_close + (current_atr * sl_mult)
             signal['tp'] = [
@@ -152,7 +251,14 @@ class SignalEngine:
                 current_close - (current_atr * tp_mults[1]),
                 current_close - (current_atr * tp_mults[2])
             ]
-            signal['confidence'] = min(90, 70 + (current_rsi - 70)/2)
+            # Calculate confidence based on multiple factors
+            confidence = 0
+            if current_rsi < 50: confidence += 20
+            if current_stoch_k < 50: confidence += 20
+            if current_adx > 25: confidence += 20
+            if current_close < ema20: confidence += 20
+            if current_close < ema50: confidence += 20
+            signal['confidence'] = min(100, confidence)
 
         # Add position sizing
         if signal['action'] != 'hold':

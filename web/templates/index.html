@@ -4,42 +4,6 @@
 
 {% block extra_css %}
 <style>
-    body.landing-bg {
-        background: linear-gradient(135deg, #f9fafb 0%, #3B82F6 10%, #F59E0B 100%);
-        transition: background 0.5s cubic-bezier(.4,0,.2,1);
-    }
-    body.dark.landing-bg {
-        background: linear-gradient(135deg, #1E293B 0%, #3B82F6 100%);
-    }
-    .hero, .features, .stats, .cta {
-        opacity: 0;
-        transition: opacity 0.7s cubic-bezier(.4,0,.2,1);
-    }
-    body.loaded .hero, body.loaded .features, body.loaded .stats, body.loaded .cta {
-        opacity: 1;
-    }
-    /* Skeleton Loader */
-    .skeleton {
-        background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%);
-        background-size: 200% 100%;
-        animation: skeleton-loading 1.2s infinite linear;
-        border-radius: 8px;
-    }
-    @keyframes skeleton-loading {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
-    }
-    .dark .skeleton {
-        background: linear-gradient(90deg, #232b3b 25%, #2d3748 50%, #232b3b 75%);
-    }
-    /* Smooth Navigation */
-    .hero-buttons .btn, .btn, .feature-card, .feature-icon, .stats, .cta {
-        transition: background 0.3s, color 0.3s, box-shadow 0.3s, transform 0.2s;
-    }
-    .btn:active, .feature-card:active {
-        transform: scale(0.97);
-    }
-    /* General Styles */
     .hero {
         background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
         color: var(--white);
@@ -246,62 +210,37 @@
         .hero h1 {
             font-size: 2.5rem;
         }
+        
         .hero-buttons {
             flex-direction: column;
             align-items: center;
         }
+        
         .features-grid {
             grid-template-columns: 1fr;
         }
+        
         .stats-grid {
-            grid-template-columns: 1fr;
-        }
-        .features, .stats, .cta {
-            padding: 2rem 0;
-        }
-        .card {
-            margin-bottom: 1.5rem;
-        }
-    }
-    @media (max-width: 480px) {
-        .hero {
-            padding: 3rem 0;
-        }
-        .features, .stats, .cta {
-            padding: 1rem 0;
-        }
-        .card {
-            margin-bottom: 1rem;
+            grid-template-columns: repeat(2, 1fr);
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div id="skeleton-landing" style="display:none;">
-    <div class="skeleton" style="height: 120px; width: 60%; margin: 2rem auto;"></div>
-    <div class="skeleton" style="height: 60px; width: 80%; margin: 1rem auto;"></div>
-    <div class="skeleton" style="height: 300px; margin: 2rem auto;"></div>
-    <div class="skeleton" style="height: 120px; width: 90%; margin: 1rem auto;"></div>
-</div>
-
 <section class="hero">
     <div class="container">
         <div class="hero-content">
             <h1>Professional Trading<br>Made Simple</h1>
             <p>Join thousands of traders who trust TradePro for secure, reliable, and profitable trading with advanced tools and real-time market data.</p>
             <div class="hero-buttons">
-                <a href="/register" class="btn btn-gold">
+                <a href="{{ url_for('register') }}" class="btn btn-gold">
                     <i class="fas fa-rocket"></i>
                     Start Trading Now
                 </a>
-                <a href="/demo" class="btn btn-outline" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); color: white;">
+                <a href="{{ url_for('dashboard.profile') }}" class="btn btn-outline" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); color: white;">
                     <i class="fas fa-play"></i>
                     Try Demo Account
-                </a>
-                <a href="/login" class="btn btn-primary">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Sign In
                 </a>
             </div>
         </div>
@@ -370,57 +309,10 @@
     <div class="container">
         <h2>Ready to Start Your Trading Journey?</h2>
         <p>Join the platform trusted by professional traders worldwide</p>
-        <a href="/register" class="btn btn-primary" style="font-size: 1.2rem; padding: 1.25rem 2.5rem;">
+        <a href="{{ url_for('register') }}" class="btn btn-primary" style="font-size: 1.2rem; padding: 1.25rem 2.5rem;">
             <i class="fas fa-user-plus"></i>
             Create Free Account
         </a>
     </div>
 </section>
-
-{% if user_authenticated %}
-<section class="card" style="max-width: 900px; margin: 3rem auto 2rem auto; background: linear-gradient(90deg, #3B82F622 0%, #F59E0B22 100%);">
-    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-        <i class="fas fa-bullhorn" style="color: var(--primary-blue); font-size: 1.3rem;"></i>
-        <h3 style="font-size: 1.25rem; font-weight: 600; margin: 0;">What's New / Platform Updates</h3>
-    </div>
-    <ul style="list-style: none; padding: 0; margin: 0;">
-        <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-gray);">
-            <strong>New:</strong> Multi-timeframe signals now available for all Pro users!
-        </li>
-        <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-gray);">
-            <strong>Update:</strong> Improved risk management tools and performance dashboard.
-        </li>
-        <li style="padding: 0.5rem 0;">
-            <strong>Tip:</strong> Visit the Help section for new video tutorials and FAQs.
-        </li>
-    </ul>
-</section>
-{% endif %}
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    // Landing skeleton loader and smooth loading
-    document.addEventListener('DOMContentLoaded', function() {
-        document.body.classList.add('landing-bg');
-        const hero = document.querySelector('.hero');
-        const features = document.querySelector('.features');
-        const stats = document.querySelector('.stats');
-        const cta = document.querySelector('.cta');
-        const skeleton = document.getElementById('skeleton-landing');
-        skeleton.style.display = 'block';
-        if(hero) hero.style.opacity = 0;
-        if(features) features.style.opacity = 0;
-        if(stats) stats.style.opacity = 0;
-        if(cta) cta.style.opacity = 0;
-        setTimeout(() => {
-            skeleton.style.display = 'none';
-            document.body.classList.add('loaded');
-            if(hero) hero.style.opacity = 1;
-            if(features) features.style.opacity = 1;
-            if(stats) stats.style.opacity = 1;
-            if(cta) cta.style.opacity = 1;
-        }, 1200); // Simulate loading
-    });
-</script>
 {% endblock %}
