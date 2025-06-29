@@ -1,111 +1,165 @@
-# Tonny 
+# Trading Bot Project Progress
 
-1. Basic Signal Engine Skeleton
-Start implementing the core logic for fetching data and generating signals.
-Begin with stubs in data_fetcher.py and engine.py. 
+## Project Overview
+A comprehensive trading bot system with Telegram integration, web dashboard, and advanced signal generation capabilities.
 
-2. Telegram Bot Integration
-Set up a basic Telegram bot using python-telegram-bot in telegram_bot.py.
-Make sure you can send a test message to your Telegram account.
+## Tonny's Chapter - Signal Engine Development
 
-3. Configuration Management
-Ensure sensitive info (like your Telegram token) is loaded from .env using python-dotenv.
+### Completed Tasks 
+- [x] Basic Signal Engine Skeleton
+  - Implemented core data fetching and signal generation logic
+  - Added technical indicators (EMA, MACD, RSI, ATR)
+  - Multi-timeframe support (5min, 15min, 4hr, 24hr)
+  - TP/SL and trade amount calculations
 
-4. Version Control & Collaboration
-Make sure your .gitignore is set up to ignore sensitive and unnecessary files.
-Push your initial setup to GitHub so collaborators can pull and contribute.
+- [x] Technical Indicators Implementation
+  - Moving Averages (SMA, EMA)
+  - Trend Indicators (ADX, DI+/-DI-)
+  - Momentum Indicators (RSI, Stochastic)
+  - Volatility Indicators (Standard Deviation, Bollinger Bands)
+  - Volume Indicators (VWAP, VWMA)
 
----
+- [x] Signal Generation Logic
+  - Trade duration calculation based on timeframe and market conditions
+  - Market condition analysis using multiple indicators
+  - Signal confidence scoring system
+  - Risk management parameters
 
-## Next Steps Tony
+### In Progress 
+- [ ] Advanced Signal Generation
+  - Implement Ichimoku Cloud
+  - Add Fibonacci retracement levels
+  - Enhance volume analysis
+  - Improve confidence scoring
 
-5. Signal Logic Implementation
-- Implement technical indicators (EMA, MACD, RSI, ATR, etc.) in engine.py. ✅
-- Add logic for multi-timeframe signals (5min, 15min, 4hr, 24hr). ✅
-- Calculate TP/SL and trade amount per user risk profile/amount for each trade signal or amount to place for each trade. ✅
+### Next Steps 
+1. **Signal Engine Enhancements**
+   - Add more technical indicators
+   - Improve signal validation
+   - Add backtesting capabilities
+   - Implement paper trading mode
 
-6. Telegram Bot & Web Integration
-- Add user authentication: link Telegram user_id to web user account. ✅
-- Implement /subscribe, /change_symbol, /status, /signals commands. ✅
-- Integrate payment flow (Telegram Payments or Stripe/PayPal). ✅
-- Set up webhook endpoints (Flask or FastAPI) for payment callbacks. ✅
+2. **Risk Management**
+   - Position sizing optimization
+   - Dynamic stop loss adjustment
+   - Portfolio risk analysis
 
-7. Database Models
-- Define models for users, subscriptions, signals, and trade logs in models.py.
+### Technical Documentation
 
----
+#### Signal Engine
+```python
+# Technical Indicators
+SMA = sum(Close[i-n:i]) / n
+EMA = (Close[i] * (2/(1+n))) + (EMA[i-1] * (1-(2/(1+n))))
 
-# Felix
+# Market Conditions
+Conditions:
+- Trend: ADX > 40 (Strong), 25-40 (Moderate), <25 (Weak)
+- Momentum: RSI > 70 (Overbought), <30 (Oversold)
+- Volatility: σ > 1.5 * avg_σ (High), <0.8 * avg_σ (Low)
+```
 
-1. Web pages integration
-    - base.html
-    - index.html
-    - signals.html
-    - login.html
-    - dashboard.html
-2. User Authentication
-    -Login and registration forms
-    -User session management
+### Next Sprint Goals
 
----
+- Complete advanced signal indicators
+- Implement backtesting framework
+- Optimize signal generation
+- Add paper trading mode
 
-## Next Steps Felix
 
-3. User Registration & Login
-- Build registration and login forms (templates/login.html, templates/register.html).
-- Implement session management (Flask-Login or similar).
-- After login, redirect users to dashboard.html with bot info and user-specific data.
 
-4. Dashboard Integration
-- Display user subscription status, recent signals, and trade stats.
-- Add links/buttons to connect Telegram account (show Telegram user_id if available).
 
-5. Link Bot & Web Templates
-- Ensure users can log in via Telegram and access the web dashboard.
-- On successful Telegram login, sync user session with web app.
 
----
 
-# Integration Plan
+## Felix's Chapter - Web Development
 
-- When a user logs in via Telegram, create or update their web user account.
-- Use Telegram user_id as the primary key for linking bot and web sessions.
-- After registration/login on the web, prompt users to connect their Telegram account for signal delivery.
-- All trading signals, TP/SL, and trade info should be accessible both via Telegram and the web dashboard.
+### Completed Tasks 
+- [x] Web Pages Integration
+  - Base template (base.html)
+  - Login and registration forms
+  - Dashboard layout
+  - Signals display page
 
----
+- [x] User Authentication
+  - Login and registration system
+  - Session management
+  - User profile management
 
-# Key Variables/Features to Implement
+### In Progress 
+- [ ] Dashboard Integration
+  - Subscription status display
+  - Signal history view
+  - Trade statistics
+  - User settings
 
-- User: id, telegram_user_id, email, password_hash, subscription_status, trial_start, trial_end
-- Signal: id, symbol, timeframe, entry, tp, sl, risk, generated_at
-- Subscription: user_id, tier, start_date, end_date, payment_status
-- Payment: user_id, amount, type, status, timestamp
-- Trade Log: user_id, signal_id, executed_at, result
+### Next Steps 
+1. **Dashboard Features**
+   - Real-time signal updates
+   - Trade performance tracking
+   - Portfolio visualization
+   - Custom indicator settings
 
----
+2. **Integration Tasks**
+   - Telegram bot-web sync
+   - Payment system integration
+   - User notifications
+   - API endpoints
 
-# intergration
+### Database Models
+```python
+User:
+- id
+- telegram_user_id
+- email
+- password_hash
+- subscription_status
+- trial_start
+- trial_end
 
-Telegram Bot: Payment & Subscription Flow
-Implement /subscribe and /change_symbol commands in your Telegram bot (telegram_bot.py and handlers).
-Integrate Telegram Payments API or Stripe/PayPal/mpesa/visa for subscriptions and symbol changes.
-Handle payment callbacks: Set up webhook endpoints (Flask or FastAPI) to receive payment events and update user status in your database.
+Signal:
+- id
+- symbol
+- timeframe
+- entry
+- tp
+- sl
+- risk
+- generated_at
 
-Files added:
-    - app/handlers/subscribe_command.py
-    - app/handlers/change_symbol.py
+Subscription:
+- user_id
+- tier
+- start_date
+- end_date
+- payment_status
+```
 
----
+### Integration Plan
 
-# Felix
+1. **Authentication Flow**
+   - Telegram login → Web session creation
+   - Web login → Telegram user linking
+   - Session synchronization
 
-1. Web pages integration
-    - base.html
-    - index.html
-    - signals.html
-    - login.html
-    - dashboard.html
-2. User Authentication
-    -Login and registration forms
-    -User session management
+2. **Signal Delivery**
+   - Web dashboard updates
+   - Telegram notifications
+   - Email alerts
+
+3. **Payment System**
+   - Subscription management
+   - Payment processing
+   - Trial period handling
+
+### Next Sprint Goals
+
+- Complete dashboard features
+- Implement real-time updates
+- Add advanced user settings
+- Finalize integration points
+
+## Important Notes
+- All code changes must be documented
+- Regular code reviews required
+- Maintain consistent coding standards
+- Keep README updated with changes
