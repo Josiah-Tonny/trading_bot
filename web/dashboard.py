@@ -1,6 +1,7 @@
 import sys
 import os
 
+
 # Add the project root to Python path (same pattern as app.py)
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
@@ -23,7 +24,6 @@ dashboard_bp = Blueprint('dashboard', __name__)
 def dashboard():
     print(f"=== DASHBOARD DEBUG ===")
     print(f"Session contents: {dict(session)}")
-    
     user_id = session.get('user_id')
     print(f"user_id from session: {user_id}")
     
@@ -50,7 +50,7 @@ def dashboard():
     signals = generate_daily_signals(user) if user else []
     print(f"✅ About to render dashboard template")
     
-    return render_template('dashboard.html', user=user, signals=signals)
+    return render_template('dashboard.html', user=user, signals=signals, user_id=user_id)
 
 @dashboard_bp.route('/profile')
 def profile():
