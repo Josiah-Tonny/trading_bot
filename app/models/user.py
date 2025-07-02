@@ -1,11 +1,14 @@
 from sqlalchemy.orm import Session
 from app.models.models import User, Subscription, SessionLocal
-from typing import Optional, List
+from typing import Optional, List, Dict
 from datetime import datetime, timedelta
 import json
 import hashlib
 import secrets
 import string
+import logging
+
+logger = logging.getLogger(__name__)
 
 class UserService:
     def __init__(self):
@@ -45,6 +48,8 @@ class UserService:
             email=email.lower() if email else None,
             password_hash=self._hash_password(password) if password else None,
             telegram_user_id=telegram_id,
+            registration_method='telegram' if telegram_id else 'email',
+            is_active=True if telegram_id else False,  # Telegram users are auto-activated
             **kwargs
         )
         
@@ -52,6 +57,59 @@ class UserService:
         self.db.commit()
         self.db.refresh(user)
         return user
+
+    def create_telegram_user(self, telegram_data: Dict) -> User:
+        """
+        Create or update a user from Telegram authentication data
+        """
+        telegram_user_id = telegram_data.get('telegram_user_id')
+        
+        if not telegram_user_id:
+            raise ValueError("Invalid Telegram user ID")
+
+        # Check if user already exists
+        existing_user = self.get_user_by_telegram_id(telegram_user_id)
+        
+        if existing_user:
+            # Update existing user with latest Telegram data
+            existing_user.first_name = telegram_data.get('first_name') or existing_user.first_name
+            existing_user.last_name = telegram_data.get('last_name') or existing_user.last_name
+            existing_user.telegram_username = telegram_data.get('telegram_username') or existing_user.telegram_username
+            existing_user.profile_picture = telegram_data.get('profile_picture') or existing_user.profile_picture
+            existing_user.updated_at = datetime.utcnow()
+            
+            self.db.commit()
+            self.db.refresh(existing_user)
+            return existing_user
+
+        # Create new user
+        user = User(
+            telegram_user_id=telegram_user_id,
+            first_name=telegram_data.get('first_name', ''),
+            last_name=telegram_data.get('last_name', ''),
+            telegram_username=telegram_data.get('telegram_username', ''),
+            username=telegram_data.get('telegram_username') or f"tg_user_{telegram_user_id}",
+            profile_picture=telegram_data.get('profile_picture', ''),
+            registration_method='telegram',
+            is_active=True,  # Telegram users are automatically activated
+            risk_tolerance='moderate'  # Default risk tolerance
+        )
+        
+        self.db.add(user)
+        self.db.commit()
+        self.db.refresh(user)
+        
+        logger.info(f"Created new Telegram user: {user.id} (TG: {telegram_user_id})")
+        return user
+
+    def authenticate_telegram_user(self, telegram_user_id: int) -> Optional[User]:
+        """
+        Authenticate user by Telegram ID
+        """
+        return self.db.query(User).filter(
+            User.telegram_user_id == telegram_user_id,
+            User.is_active == True
+        ).first()
 
     def update_user(self, user: User, **kwargs) -> User:
         for key, value in kwargs.items():
