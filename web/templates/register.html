@@ -191,7 +191,6 @@
     }
 
     .telegram-fallback {
-        display: none;
         background: #0088cc;
         color: white;
         padding: 1rem 2rem;
@@ -209,6 +208,8 @@
     .telegram-fallback:hover {
         background: #006ba3;
         transform: translateY(-1px);
+        color: white;
+        text-decoration: none;
     }
 
     /* Email Form Styles */
@@ -709,33 +710,36 @@
 
                 <div class="telegram-login-widget">
                     <script async src="https://telegram.org/js/telegram-widget.js?22" 
-                            data-telegram-login="{{ config.TELEGRAM_BOT_USERNAME or 'TradePro_Bot' }}" 
+                            data-telegram-login="TradePro_Bot" 
                             data-size="large" 
                             data-radius="8"
-                            data-auth-url="{{ url_for('terms', _external=True) }}" 
+                            data-auth-url="{{ url_for('telegram_auth', _external=True) }}" 
                             data-request-access="write">
                     </script>
                 </div>
 
-                <a href="https://t.me/{{ config.TELEGRAM_BOT_USERNAME or 'TradePro_Bot' }}?start=register" 
+                <a href="https://t.me/TradePro_Bot?start=register" 
                    class="telegram-fallback" 
                    target="_blank"
+                   id="telegramFallback"
                    style="display: none;">
                     <i class="fab fa-telegram-plane"></i>
                     Open Telegram Bot 
                 </a>
 
                 <div style="margin-top: 2rem; padding: 1.5rem; background: var(--light-gray); border-radius: 8px; font-size: 0.875rem; color: var(--text-muted);">
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
-                        <i class="fas fa-info-circle" style="color: var(--primary-blue);"></i>
-                        <strong>How it works:</strong>
+                    <div class="dark" style="background: var(--dark-bg);">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                            <i class="fas fa-info-circle" style="color: var(--primary-blue);"></i>
+                            <strong>How it works:</strong>
+                        </div>
+                        <ol style="margin: 0; padding-left: 1.5rem; line-height: 1.6;">
+                            <li>Click "Login with Telegram" above</li>
+                            <li>Authorize TradePro in your Telegram app</li>
+                            <li>Your account will be created automatically</li>
+                            <li>Start receiving trading notifications instantly</li>
+                        </ol>
                     </div>
-                    <ol style="margin: 0; padding-left: 1.5rem; line-height: 1.6;">
-                        <li>Click "Login with Telegram" above</li>
-                        <li>Authorize TradePro in your Telegram app</li>
-                        <li>Your account will be created automatically</li>
-                        <li>Start receiving trading notifications instantly</li>
-                    </ol>
                 </div>
             </div>
         </div>
@@ -842,7 +846,7 @@
 
     setTimeout(function() {
         const telegramWidget = document.querySelector('iframe[src*="oauth.telegram.org"]');
-        const fallbackButton = document.querySelector('.telegram-fallback');
+        const fallbackButton = document.getElementById('telegramFallback');
         
         if (!telegramWidget && fallbackButton) {
             fallbackButton.style.display = 'inline-flex';

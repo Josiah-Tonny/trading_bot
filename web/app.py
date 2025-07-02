@@ -21,6 +21,7 @@ sys.path.insert(0, project_root)
 # Initialize Flask app FIRST
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
+app.config['TELEGRAM_BOT_TOKEN'] = os.getenv('TELEGRAM_BOT_TOKEN')
 
 # Explicit session configuration to fix cookie issues
 app.config.update(
@@ -86,12 +87,13 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 def login_required(f: F) -> F:
     from functools import wraps
+    from typing import cast
     @wraps(f)
     def decorated_function(*args: Any, **kwargs: Any) -> Any:
         if 'user' not in session:
             return redirect(url_for('login'))
         return f(*args, **kwargs)
-    return decorated_function
+    return cast(F, decorated_function)
 
 @app.route('/')
 def index():
@@ -103,6 +105,10 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
+        
+        if not email or not password:
+            flash('Email and password are required')
+            return redirect(url_for('login'))
         
         print(f"LOGIN DEBUG - Secret key exists: {bool(app.secret_key)}")
         print(f"LOGIN DEBUG - Cookie config: {app.config.get('SESSION_COOKIE_PATH')}")
@@ -310,6 +316,33 @@ def api_message():
 def sync_user():
     data = request.json
     return jsonify({'status': 'ok'})
+
+@app.route('/telegram_auth', methods=['GET', 'POST'])
+def telegram_auth():
+    if request.method == 'POST':
+        from utils.telegram_auth import verify_telegram_auth, extract_telegram_user_data
+        
+        # Get auth data from request
+        auth_data = request.json or request.form.to_dict()
+        
+        # Get bot token from config
+        bot_token = app.config.get('TELEGRAM_BOT_TOKEN')
+        if not bot_token:
+            return jsonify({'status': 'error', 'message': 'Telegram bot token not configured'}), 500
+        
+        # Verify authentication
+        if not verify_telegram_auth(auth_data, bot_token):
+            return jsonify({'status': 'error', 'message': 'Invalid Telegram authentication'}), 401
+        
+        # Extract user data
+        user_data = extract_telegram_user_data(auth_data)
+        
+        # TODO: Create/update user account with Telegram data
+        # For now, just return success
+        return jsonify({'status': 'success', 'user_data': user_data})
+    else:
+        # Return authentication endpoint info
+        return jsonify({'endpoint': 'telegram_auth', 'methods': ['POST']})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
