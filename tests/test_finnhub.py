@@ -1,4 +1,5 @@
 import pytest
+import requests
 from unittest.mock import patch, MagicMock
 from app.finnhub_client import FinnhubClient
 
@@ -41,7 +42,7 @@ def test_get_quote(mock_session):
 def test_error_handling(mock_session):
     """Test error handling in API requests."""
     # Setup mock to raise an exception
-    mock_session.return_value.get.side_effect = Exception("API Error")
+    mock_session.return_value.get.side_effect = requests.exceptions.RequestException("API Error")
     
     client = FinnhubClient(api_key="test_key")
     
@@ -49,22 +50,34 @@ def test_error_handling(mock_session):
         client.get_quote("AAPL")
     assert "API Error" in str(excinfo.value)
 
-@patch('app.finnhub_client.requests.Session')
-def test_retry_logic(mock_session):
+def test_retry_logic(mocker):
     """Test that retry logic works on failed requests."""
     # Setup mock to fail twice then succeed
-    mock_response = MagicMock()
+    mock_response = mocker.MagicMock()
     mock_response.json.return_value = {'c': 150.0}
     
+    # Create a mock session with side effects
+    mock_session = mocker.patch('app.finnhub_client.requests.Session')
+    
+    # Create a mock HTTP error
+    error_response = mocker.MagicMock()
+    error_response.status_code = 500
+    http_error = requests.exceptions.HTTPError(response=error_response)
+    
     mock_session.return_value.get.side_effect = [
-        Exception("First failure"),
-        Exception("Second failure"),
+        http_error,
+        http_error,
         mock_response
     ]
     
-    client = FinnhubClient(api_key="test_key")
-    quote = client.get_quote("AAPL")
+    # Patch the sleep function to speed up the test
+    mocker.patch('time.sleep')
     
-    # Should have retried and eventually succeeded
+    client = FinnhubClient(api_key="test_key")
+    
+    # This should succeed after two retries
+    quote = client.get_quote("AAPL")
     assert quote['c'] == 150.0
+    
+    # Verify the request was retried 3 times (initial + 2 retries)
     assert mock_session.return_value.get.call_count == 3

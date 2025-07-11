@@ -42,6 +42,11 @@ class FinnhubClient:
             response = self.session.get(url, params=params, timeout=10)
             response.raise_for_status()
             return response.json()
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code in [429, 500, 502, 503, 504]:
+                # Let the retry mechanism handle these status codes
+                raise
+            raise Exception(f"Finnhub API request failed: {str(e)}")
         except requests.exceptions.RequestException as e:
             raise Exception(f"Finnhub API request failed: {str(e)}")
     

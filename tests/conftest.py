@@ -1,44 +1,93 @@
 import os
-import pytest
-from dotenv import load_dotenv
-import json
 from pathlib import Path
+from dotenv import load_dotenv
+from datetime import datetime, timedelta
+import time
+import pytest
+import requests_mock
 
-# Load environment variables for testing
-load_dotenv()
+# Load environment variables from .env file
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
-def load_mock_response(filename):
-    """Helper to load mock API responses from JSON files."""
-    test_dir = Path(__file__).parent / 'test_data'
-    with open(test_dir / f'{filename}.json') as f:
-        return json.load(f)
+# Configure pytest to add custom markers
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers",
+        "integration: mark test as integration test (deselect with '-m not integration')",
+    )
+    config.addinivalue_line(
+        "markers",
+        "unit: mark test as unit test (deselect with '-m not unit')",
+    )
+    config.addinivalue_line(
+        "markers",
+        "slow: mark test as slow (deselect with '-m not slow')",
+    )
 
-@pytest.fixture(autouse=True)
-def mock_env_vars(monkeypatch):
-    """Set up test environment variables."""
-    monkeypatch.setenv('ALPHAVANTAGE_KEY', 'test_alpha_vantage_key')
-    monkeypatch.setenv('FINNHUB_KEY', 'test_finnhub_key')
-    monkeypatch.setenv('NEWSAPI_KEY', 'test_newsapi_key')
+# Add command line options for API keys
+def pytest_addoption(parser):
+    parser.addoption(
+        "--run-integration", 
+        action="store_true", 
+        default=False, 
+        help="run integration tests with real API calls"
+    )
+    parser.addoption(
+        "--run-slow", 
+        action="store_true", 
+        default=False, 
+        help="run slow tests (including integration tests)"
+    )
 
+# Skip integration tests by default unless --run-integration is used
+def pytest_collection_modifyitems(config, items):
+    # Handle integration tests
+    if config.getoption("--run-integration") or config.getoption("--run-slow"):
+        return
+    
+    skip_integration = pytest.mark.skip(reason="need --run-integration or --run-slow option to run")
+    for item in items:
+        if "integration" in item.keywords:
+            item.add_marker(skip_integration)
+    
+    # Handle slow tests
+    if config.getoption("--run-slow"):
+        return
+    
+    skip_slow = pytest.mark.skip(reason="need --run-slow option to run")
+    for item in items:
+        if "slow" in item.keywords:
+            item.add_marker(skip_slow)
+
+# HTTP request mocking fixture
 @pytest.fixture
-def mock_alpha_vantage_response():
-    """Return a sample Alpha Vantage API response."""
+def mock_requests():
+    """Fixture for mocking HTTP requests."""
+    with requests_mock.Mocker() as m:
+        yield m
+
+# Global fixture for rate limiting between tests
+@pytest.fixture(scope="session", autouse=True)
+def rate_limiter():
+    """Add delay between tests to avoid hitting API rate limits."""
+    start_time = time.time()
+    yield
+    end_time = time.time()
+    elapsed = end_time - start_time
+    if elapsed < 1.0:  # Add delay if test was too fast
+        time.sleep(1.0 - elapsed)
+
+# Fixture for API clients
+@pytest.fixture(scope="module")
+def api_clients():
+    """Provide API clients for integration tests."""
+    from app.alpha_vantage_client import AlphaVantageClient
+    from app.finnhub_client import FinnhubClient
+    from app.news_client import NewsAPIClient
+    
     return {
-        "Meta Data": {
-            "1. Information": "Intraday (5min) open, high, low, close prices and volume",
-            "2. Symbol": "AAPL",
-            "3. Last Refreshed": "2023-01-01 19:55:00",
-            "4. Interval": "5min",
-            "5. Output Size": "Compact",
-            "6. Time Zone": "US/Eastern"
-        },
-        "Time Series (5min)": {
-            "2023-01-01 19:55:00": {
-                "1. open": "150.0000",
-                "2. high": "151.0000",
-                "3. low": "149.5000",
-                "4. close": "150.5000",
-                "5. volume": "1000"
-            }
-        }
+        'alpha_vantage': AlphaVantageClient(),
+        'finnhub': FinnhubClient(),
+        'newsapi': NewsAPIClient()
     }

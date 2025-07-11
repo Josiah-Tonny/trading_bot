@@ -1,4 +1,5 @@
 import pytest
+import requests
 from unittest.mock import patch, MagicMock
 from app.news_client import NewsAPIClient
 
@@ -67,7 +68,7 @@ def test_get_everything(mock_session):
 def test_error_handling(mock_session):
     """Test error handling in API requests."""
     # Setup mock to raise an exception
-    mock_session.return_value.get.side_effect = Exception("API Error")
+    mock_session.return_value.get.side_effect = requests.exceptions.RequestException("API Error")
     
     client = NewsAPIClient(api_key="test_key")
     
@@ -75,25 +76,44 @@ def test_error_handling(mock_session):
         client.get_top_headlines()
     assert "API Error" in str(excinfo.value)
 
-@patch('app.news_client.requests.Session')
-def test_rate_limit_handling(mock_session):
+def test_rate_limit_handling(mocker):
     """Test rate limit handling."""
-    # Setup mock to fail with 429 then succeed
-    error_response = MagicMock()
+    # Create a mock response for the error
+    error_response = mocker.MagicMock()
     error_response.status_code = 429
-    error_response.json.return_value = {'status': 'error', 'code': 'rateLimited', 'message': 'Rate limit reached'}
+    error_response.text = '{"status": "error", "code": "rateLimited", "message": "Rate limit reached"}'
+    error_response.json.return_value = {
+        'status': 'error',
+        'code': 'rateLimited',
+        'message': 'Rate limit reached'
+    }
     
-    success_response = MagicMock()
-    success_response.json.return_value = {'status': 'ok', 'totalResults': 0, 'articles': []}
+    # Create a successful response
+    success_response = mocker.MagicMock()
+    success_response.json.return_value = {
+        'status': 'ok',
+        'totalResults': 1,
+        'articles': [{'title': 'Test Article'}]
+    }
     
+    # Create a mock session with side effects
+    mock_session = mocker.patch('app.news_client.requests.Session')
+    
+    # First call raises 429, second call succeeds
     mock_session.return_value.get.side_effect = [
         requests.exceptions.HTTPError("429 Client Error", response=error_response),
         success_response
     ]
     
-    client = NewsAPIClient(api_key="test_key")
-    articles = client.get_top_headlines()
+    # Patch sleep to speed up the test
+    mocker.patch('time.sleep')
     
-    # Should have retried and eventually succeeded
-    assert articles == []
+    client = NewsAPIClient(api_key="test_key")
+    
+    # This should succeed after one retry
+    articles = client.get_top_headlines()
+    assert len(articles) == 1
+    assert articles[0]['title'] == 'Test Article'
+    
+    # Verify the request was retried once
     assert mock_session.return_value.get.call_count == 2

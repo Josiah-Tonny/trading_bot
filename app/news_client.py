@@ -45,10 +45,27 @@ class NewsAPIClient:
             )
             response.raise_for_status()
             return response.json()
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 429:
+                error_msg = "Rate limit reached"
+                if hasattr(e.response, 'json') and callable(e.response.json):
+                    try:
+                        error_data = e.response.json()
+                        if isinstance(error_data, dict) and 'message' in error_data:
+                            error_msg = error_data['message']
+                    except:
+                        pass
+                raise requests.exceptions.RetryError(f"Rate limit reached: {error_msg}")
+            raise
         except requests.exceptions.RequestException as e:
             error_msg = f"NewsAPI request failed: {str(e)}"
-            if hasattr(e.response, 'json') and e.response.json().get('message'):
-                error_msg += f" - {e.response.json()['message']}"
+            if hasattr(e, 'response') and hasattr(e.response, 'json') and callable(e.response.json):
+                try:
+                    error_data = e.response.json()
+                    if isinstance(error_data, dict) and 'message' in error_data:
+                        error_msg = f"{error_msg} - {error_data['message']}"
+                except:
+                    pass
             raise Exception(error_msg)
     
     def get_top_headlines(
@@ -98,4 +115,4 @@ class NewsAPIClient:
         return data.get('articles', [])
 
 # Create a singleton instance
-news_client = NewsAPIClient()
+newsapi_client = NewsAPIClient()
