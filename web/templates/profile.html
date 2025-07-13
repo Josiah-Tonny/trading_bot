@@ -1,0 +1,600 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - TradePro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile {
+        padding: 2rem 0;
+        background: var(--light-gray);
+        min-height: calc(100vh - 80px);
+    }
+
+    .dark .profile {
+        background: var(--dark-bg);
+    }
+
+    .profile-header {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid var(--border-gray);
+    }
+
+    .dark .profile-header {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .profile-info {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: var(--white);
+        font-weight: 700;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .profile-details h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--charcoal);
+    }
+
+    .dark .profile-details h1 {
+        color: var(--dark-text);
+    }
+
+    .profile-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        color: var(--text-muted);
+        font-size: 1rem;
+    }
+
+    .dark .profile-meta {
+        color: var(--dark-muted);
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .verification-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: var(--success-green);
+        color: var(--white);
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .verification-badge.telegram {
+        background: #0088cc;
+    }
+
+    .verification-badge.pending {
+        background: var(--wealth-gold);
+    }
+
+    .profile-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .stat-card {
+        background: var(--light-gray);
+        padding: 1.5rem;
+        border-radius: 12px;
+        text-align: center;
+        border: 1px solid var(--border-gray);
+    }
+
+    .dark .stat-card {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--primary-blue);
+    }
+
+    .dark .stat-value {
+        color: var(--dark-accent);
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+
+    .dark .stat-label {
+        color: var(--dark-muted);
+    }
+
+    .profile-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    .profile-card {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid var(--border-gray);
+    }
+
+    .dark .profile-card {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .card-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: var(--charcoal);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .dark .card-title {
+        color: var(--dark-text);
+    }
+
+    .card-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--primary-blue);
+        color: var(--white);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--charcoal);
+    }
+
+    .dark .form-group label {
+        color: var(--dark-text);
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-gray);
+        border-radius: 8px;
+        background: var(--white);
+        color: var(--charcoal);
+        font-size: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .dark .form-control {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-text);
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+    }
+
+    .dark .form-control:focus {
+        border-color: var(--dark-accent);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--border-gray);
+    }
+
+    .dark .activity-item {
+        border-bottom-color: var(--dark-border);
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: var(--white);
+    }
+
+    .activity-icon.trade {
+        background: var(--success-green);
+    }
+
+    .activity-icon.login {
+        background: var(--primary-blue);
+    }
+
+    .activity-icon.settings {
+        background: var(--wealth-gold);
+    }
+
+    .activity-details {
+        flex: 1;
+    }
+
+    .activity-title {
+        font-weight: 500;
+        color: var(--charcoal);
+        margin-bottom: 0.25rem;
+    }
+
+    .dark .activity-title {
+        color: var(--dark-text);
+    }
+
+    .activity-time {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .dark .activity-time {
+        color: var(--dark-muted);
+    }
+
+    .risk-tolerance {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .risk-option {
+        flex: 1;
+        padding: 1rem;
+        border: 2px solid var(--border-gray);
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: var(--white);
+    }
+
+    .dark .risk-option {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+    }
+
+    .risk-option.active {
+        border-color: var(--primary-blue);
+        background: rgba(30, 64, 175, 0.1);
+    }
+
+    .dark .risk-option.active {
+        border-color: var(--dark-accent);
+        background: rgba(139, 92, 246, 0.1);
+    }
+
+    .risk-option:hover {
+        border-color: var(--primary-blue);
+    }
+
+    .dark .risk-option:hover {
+        border-color: var(--dark-accent);
+    }
+
+    .risk-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--charcoal);
+    }
+
+    .dark .risk-title {
+        color: var(--dark-text);
+    }
+
+    .risk-description {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .dark .risk-description {
+        color: var(--dark-muted);
+    }
+
+    @media (max-width: 768px) {
+        .profile-info {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .profile-content {
+            grid-template-columns: 1fr;
+        }
+
+        .profile-meta {
+            justify-content: center;
+        }
+
+        .risk-tolerance {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="profile">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="profile-info">
+                <div class="profile-avatar">
+                    {% if current_user.profile_photo_url %}
+                        <img src="{{ current_user.profile_photo_url }}" alt="Profile Photo">
+                    {% else %}
+                        {{ current_user.first_name[0] }}{{ current_user.last_name[0] if current_user.last_name else '' }}
+                    {% endif %}
+                </div>
+                <div class="profile-details">
+                    <h1>{{ current_user.first_name }} {{ current_user.last_name }}</h1>
+                    <div class="profile-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-envelope"></i>
+                            {{ current_user.email }}
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            Member since {{ current_user.created_at.strftime('%B %Y') }}
+                        </div>
+                        {% if current_user.telegram_username %}
+                        <div class="meta-item">
+                            <i class="fab fa-telegram-plane"></i>
+                            @{{ current_user.telegram_username }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        {% if current_user.email_verified %}
+                        <span class="verification-badge">
+                            <i class="fas fa-check-circle"></i>
+                            Email Verified
+                        </span>
+                        {% endif %}
+                        {% if current_user.is_telegram_user %}
+                        <span class="verification-badge telegram">
+                            <i class="fab fa-telegram-plane"></i>
+                            Telegram Connected
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Stats -->
+            <div class="profile-stats">
+                <div class="stat-card">
+                    <div class="stat-value">{{ portfolio.total_trades | default('0') }}</div>
+                    <div class="stat-label">Total Trades</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ portfolio.win_rate | default('0') }}%</div>
+                    <div class="stat-label">Win Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ portfolio.total_pnl | default('+$0.00') }}</div>
+                    <div class="stat-label">Total P&L</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ current_user.risk_tolerance | title }}</div>
+                    <div class="stat-label">Risk Level</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-content">
+            <!-- Personal Information -->
+            <div class="profile-card">
+                <h2 class="card-title">
+                    <div class="card-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    Personal Information
+                </h2>
+                
+                <form method="POST" action="{{ url_for('auth.update_profile') }}">
+                    <div class="form-group">
+                        <label for="first_name">First Name</label>
+                        <input type="text" id="first_name" name="first_name" class="form-control" 
+                               value="{{ current_user.first_name }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="last_name">Last Name</label>
+                        <input type="text" id="last_name" name="last_name" class="form-control" 
+                               value="{{ current_user.last_name or '' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" class="form-control" 
+                               value="{{ current_user.email }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" class="form-control" 
+                               value="{{ current_user.phone or '' }}" placeholder="+1 (555) 123-4567">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Risk Tolerance</label>
+                        <div class="risk-tolerance">
+                            <div class="risk-option {% if current_user.risk_tolerance == 'conservative' %}active{% endif %}" 
+                                 onclick="selectRisk('conservative')">
+                                <div class="risk-title">Conservative</div>
+                                <div class="risk-description">Low risk, steady returns</div>
+                            </div>
+                            <div class="risk-option {% if current_user.risk_tolerance == 'moderate' %}active{% endif %}" 
+                                 onclick="selectRisk('moderate')">
+                                <div class="risk-title">Moderate</div>
+                                <div class="risk-description">Balanced risk and reward</div>
+                            </div>
+                            <div class="risk-option {% if current_user.risk_tolerance == 'aggressive' %}active{% endif %}" 
+                                 onclick="selectRisk('aggressive')">
+                                <div class="risk-title">Aggressive</div>
+                                <div class="risk-description">High risk, high potential</div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="risk_tolerance" name="risk_tolerance" value="{{ current_user.risk_tolerance }}">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Update Profile
+                    </button>
+                </form>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="profile-card">
+                <h2 class="card-title">
+                    <div class="card-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    Recent Activity
+                </h2>
+                
+                <div class="activity-list">
+                    {% set activities = [
+                        {'type': 'trade', 'title': 'Bought 100 shares of AAPL', 'time': '2 hours ago'},
+                        {'type': 'login', 'title': 'Logged in from Chrome', 'time': '4 hours ago'},
+                        {'type': 'trade', 'title': 'Sold 50 shares of TSLA', 'time': '1 day ago'},
+                        {'type': 'settings', 'title': 'Updated notification preferences', 'time': '2 days ago'},
+                        {'type': 'trade', 'title': 'Bought 200 shares of MSFT', 'time': '3 days ago'},
+                        {'type': 'login', 'title': 'Logged in via Telegram', 'time': '5 days ago'}
+                    ] %}
+                    
+                    {% for activity in activities %}
+                    <div class="activity-item">
+                        <div class="activity-icon {{ activity.type }}">
+                            {% if activity.type == 'trade' %}
+                                <i class="fas fa-exchange-alt"></i>
+                            {% elif activity.type == 'login' %}
+                                <i class="fas fa-sign-in-alt"></i>
+                            {% elif activity.type == 'settings' %}
+                                <i class="fas fa-cog"></i>
+                            {% endif %}
+                        </div>
+                        <div class="activity-details">
+                            <div class="activity-title">{{ activity.title }}</div>
+                            <div class="activity-time">{{ activity.time }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div style="margin-top: 1.5rem;">
+                    <a href="{{ url_for('main.activity_log') }}" class="btn btn-outline">
+                        <i class="fas fa-list"></i>
+                        View Full Activity Log
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function selectRisk(level) {
+        // Remove active class from all options
+        document.querySelectorAll('.risk-option').forEach(option => {
+            option.classList.remove('active');
+        });
+        
+        // Add active class to selected option
+        event.target.closest('.risk-option').classList.add('active');
+        
+        // Update hidden input
+        document.getElementById('risk_tolerance').value = level;
+    }
+
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const firstName = document.getElementById('first_name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        
+        if (!firstName || !email) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+            return false;
+        }
+        
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            e.preventDefault();
+            alert('Please enter a valid email address.');
+            return false;
+        }
+    });
+</script>
+{% endblock %}

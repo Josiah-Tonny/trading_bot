@@ -1,0 +1,1257 @@
+{% extends "base.html" %}
+
+{% block title %}Watchlist & Pairs - TradePro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .watchlist {
+        padding: 2rem 0;
+        background: var(--light-gray);
+        min-height: calc(100vh - 80px);
+    }
+
+    .dark .watchlist {
+        background: var(--dark-bg);
+    }
+
+    .watchlist-header {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid var(--border-gray);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .dark .watchlist-header {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .header-title h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--charcoal);
+        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .dark .header-title h1 {
+        background: linear-gradient(135deg, var(--dark-accent), #A855F7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .header-subtitle {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+    }
+
+    .dark .header-subtitle {
+        color: var(--dark-muted);
+    }
+
+    .watchlist-controls {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        background: var(--white);
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border: 1px solid var(--border-gray);
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .dark .watchlist-controls {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    .search-box {
+        flex: 1;
+        min-width: 250px;
+        position: relative;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 3rem;
+        border: 1px solid var(--border-gray);
+        border-radius: 8px;
+        background: var(--white);
+        color: var(--charcoal);
+        font-size: 1rem;
+    }
+
+    .dark .search-input {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-text);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+    }
+
+    .dark .search-icon {
+        color: var(--dark-muted);
+    }
+
+    .market-filter {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .filter-btn {
+        padding: 0.75rem 1.5rem;
+        border: 1px solid var(--border-gray);
+        border-radius: 8px;
+        background: var(--white);
+        color: var(--text-muted);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .dark .filter-btn {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-muted);
+    }
+
+    .filter-btn.active {
+        background: var(--primary-blue);
+        color: var(--white);
+        border-color: var(--primary-blue);
+    }
+
+    .dark .filter-btn.active {
+        background: var(--dark-accent);
+        border-color: var(--dark-accent);
+    }
+
+    .watchlist-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+    }
+
+    .pairs-section {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid var(--border-gray);
+    }
+
+    .dark .pairs-section {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: var(--charcoal);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .dark .section-title {
+        color: var(--dark-text);
+    }
+
+    .section-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--primary-blue);
+        color: var(--white);
+    }
+
+    .dark .section-icon {
+        background: var(--dark-accent);
+    }
+
+    .pair-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        background: var(--light-gray);
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-gray);
+        transition: all 0.2s ease;
+    }
+
+    .dark .pair-item {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+    }
+
+    .pair-item:hover {
+        background: var(--border-gray);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .dark .pair-item:hover {
+        background: var(--dark-border);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    .pair-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .pair-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: var(--white);
+    }
+
+    .pair-icon.forex { background: linear-gradient(135deg, #10B981, #22C55E); }
+    .pair-icon.crypto { background: linear-gradient(135deg, #F59E0B, #FCD34D); }
+    .pair-icon.stocks { background: linear-gradient(135deg, #1E40AF, #3B82F6); }
+    .pair-icon.commodities { background: linear-gradient(135deg, #8B5CF6, #A855F7); }
+
+    .pair-details {
+        flex: 1;
+    }
+
+    .pair-symbol {
+        font-weight: 600;
+        color: var(--charcoal);
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .dark .pair-symbol {
+        color: var(--dark-text);
+    }
+
+    .pair-name {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .dark .pair-name {
+        color: var(--dark-muted);
+    }
+
+    .pair-price {
+        text-align: right;
+        margin-right: 1rem;
+    }
+
+    .price-value {
+        font-weight: 600;
+        font-family: 'SF Mono', Monaco, monospace;
+        font-size: 1.1rem;
+        color: var(--charcoal);
+        margin-bottom: 0.25rem;
+    }
+
+    .dark .price-value {
+        color: var(--dark-text);
+    }
+
+    .price-change {
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.25rem;
+    }
+
+    .change-positive { color: var(--success-green); }
+    .change-negative { color: var(--danger-red); }
+
+    .timeframe-selector {
+        display: flex;
+        gap: 0.25rem;
+        background: var(--white);
+        padding: 0.25rem;
+        border-radius: 6px;
+        border: 1px solid var(--border-gray);
+    }
+
+    .dark .timeframe-selector {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+    }
+
+    .timeframe-btn {
+        padding: 0.375rem 0.75rem;
+        border: none;
+        background: transparent;
+        border-radius: 4px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        min-width: 35px;
+    }
+
+    .dark .timeframe-btn {
+        color: var(--dark-muted);
+    }
+
+    .timeframe-btn.active {
+        background: var(--primary-blue);
+        color: var(--white);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .dark .timeframe-btn.active {
+        background: var(--dark-accent);
+    }
+
+    .pair-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .action-btn {
+        padding: 0.5rem;
+        border: 1px solid var(--border-gray);
+        border-radius: 6px;
+        background: var(--white);
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+    }
+
+    .dark .action-btn {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-muted);
+    }
+
+    .action-btn:hover {
+        border-color: var(--primary-blue);
+        color: var(--primary-blue);
+    }
+
+    .dark .action-btn:hover {
+        border-color: var(--dark-accent);
+        color: var(--dark-accent);
+    }
+
+    .action-btn.remove:hover {
+        border-color: var(--danger-red);
+        color: var(--danger-red);
+    }
+
+    .available-pairs {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .add-pair-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: var(--light-gray);
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        border: 1px solid var(--border-gray);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .dark .add-pair-item {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+    }
+
+    .add-pair-item:hover {
+        background: var(--border-gray);
+        border-color: var(--primary-blue);
+    }
+
+    .dark .add-pair-item:hover {
+        background: var(--dark-border);
+        border-color: var(--dark-accent);
+    }
+
+    .add-btn {
+        padding: 0.5rem 1rem;
+        background: var(--success-green);
+        color: var(--white);
+        border: none;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .add-btn:hover {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+
+    .timeframe-config {
+        background: var(--light-gray);
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        border: 1px solid var(--border-gray);
+    }
+
+    .dark .timeframe-config {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+    }
+
+    .config-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--charcoal);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .dark .config-title {
+        color: var(--dark-text);
+    }
+
+    .timeframe-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .timeframe-option {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        background: var(--white);
+        border-radius: 6px;
+        border: 1px solid var(--border-gray);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .dark .timeframe-option {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+    }
+
+    .timeframe-option:hover {
+        border-color: var(--primary-blue);
+    }
+
+    .dark .timeframe-option:hover {
+        border-color: var(--dark-accent);
+    }
+
+    .timeframe-option.selected {
+        background: var(--primary-blue);
+        color: var(--white);
+        border-color: var(--primary-blue);
+    }
+
+    .dark .timeframe-option.selected {
+        background: var(--dark-accent);
+        border-color: var(--dark-accent);
+    }
+
+    .timeframe-checkbox {
+        width: 16px;
+        height: 16px;
+        border: 2px solid var(--border-gray);
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .timeframe-option.selected .timeframe-checkbox {
+        background: var(--white);
+        border-color: var(--white);
+    }
+
+    .timeframe-option.selected .timeframe-checkbox::after {
+        content: '✓';
+        color: var(--primary-blue);
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
+
+    .dark .timeframe-option.selected .timeframe-checkbox::after {
+        color: var(--dark-accent);
+    }
+
+    @media (max-width: 1200px) {
+        .watchlist-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .watchlist-header {
+            flex-direction: column;
+            gap: 1.5rem;
+            text-align: center;
+        }
+
+        .watchlist-controls {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .market-filter {
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .pair-item {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .pair-actions {
+            justify-content: center;
+        }
+
+        .timeframe-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="watchlist">
+        <!-- Watchlist Header -->
+        <div class="watchlist-header">
+            <div class="header-title">
+                <h1>Watchlist & Pairs</h1>
+                <p class="header-subtitle">Manage your trading pairs and timeframe preferences</p>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-outline" onclick="saveWatchlist()">
+                    <i class="fas fa-save"></i>
+                    Save Changes
+                </button>
+                <button class="btn btn-primary" onclick="addAllRecommended()">
+                    <i class="fas fa-plus"></i>
+                    Add Recommended
+                </button>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="watchlist-controls">
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" placeholder="Search pairs..." id="searchInput">
+            </div>
+            
+            <div class="market-filter">
+                <button class="filter-btn active" data-market="all">All</button>
+                <button class="filter-btn" data-market="forex">Forex</button>
+                <button class="filter-btn" data-market="crypto">Crypto</button>
+                <button class="filter-btn" data-market="stocks">Stocks</button>
+                <button class="filter-btn" data-market="commodities">Commodities</button>
+            </div>
+        </div>
+
+        <div class="watchlist-grid">
+            <!-- My Watchlist -->
+            <div class="pairs-section">
+                <h2 class="section-title">
+                    <div class="section-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    My Watchlist
+                    <span style="background: var(--primary-blue); color: var(--white); padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.875rem; margin-left: auto;">
+                        <span id="watchlistCount">8</span> pairs
+                    </span>
+                </h2>
+
+                <div id="watchlistPairs">
+                    <!-- Forex Pairs -->
+                    <div class="pair-item" data-market="forex" data-symbol="EURUSD">
+                        <div class="pair-info">
+                            <div class="pair-icon forex">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            <div class="pair-details">
+                                <div class="pair-symbol">EUR/USD</div>
+                                <div class="pair-name">Euro / US Dollar</div>
+                            </div>
+                        </div>
+                        <div class="pair-price">
+                            <div class="price-value">1.0845</div>
+                            <div class="price-change change-positive">
+                                <i class="fas fa-arrow-up"></i>
+                                +0.0023 (+0.21%)
+                            </div>
+                        </div>
+                        <div class="timeframe-selector">
+                            <button class="timeframe-btn" data-timeframe="1m">1m</button>
+                            <button class="timeframe-btn" data-timeframe="5m">5m</button>
+                            <button class="timeframe-btn active" data-timeframe="15m">15m</button>
+                            <button class="timeframe-btn" data-timeframe="1h">1h</button>
+                            <button class="timeframe-btn" data-timeframe="4h">4h</button>
+                            <button class="timeframe-btn" data-timeframe="1d">1d</button>
+                        </div>
+                        <div class="pair-actions">
+                            <button class="action-btn" onclick="configurePair('EURUSD')" title="Configure">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <button class="action-btn" onclick="viewChart('EURUSD')" title="View Chart">
+                                <i class="fas fa-chart-line"></i>
+                            </button>
+                            <button class="action-btn remove" onclick="removePair('EURUSD')" title="Remove">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="pair-item" data-market="crypto" data-symbol="BTCUSD">
+                        <div class="pair-info">
+                            <div class="pair-icon crypto">
+                                <i class="fab fa-bitcoin"></i>
+                            </div>
+                            <div class="pair-details">
+                                <div class="pair-symbol">BTC/USD</div>
+                                <div class="pair-name">Bitcoin</div>
+                            </div>
+                        </div>
+                        <div class="pair-price">
+                            <div class="price-value">$43,250</div>
+                            <div class="price-change change-positive">
+                                <i class="fas fa-arrow-up"></i>
+                                +$1,250 (+2.98%)
+                            </div>
+                        </div>
+                        <div class="timeframe-selector">
+                            <button class="timeframe-btn" data-timeframe="1m">1m</button>
+                            <button class="timeframe-btn active" data-timeframe="5m">5m</button>
+                            <button class="timeframe-btn" data-timeframe="15m">15m</button>
+                            <button class="timeframe-btn" data-timeframe="1h">1h</button>
+                            <button class="timeframe-btn" data-timeframe="4h">4h</button>
+                            <button class="timeframe-btn" data-timeframe="1d">1d</button>
+                        </div>
+                        <div class="pair-actions">
+                            <button class="action-btn" onclick="configurePair('BTCUSD')" title="Configure">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <button class="action-btn" onclick="viewChart('BTCUSD')" title="View Chart">
+                                <i class="fas fa-chart-line"></i>
+                            </button>
+                            <button class="action-btn remove" onclick="removePair('BTCUSD')" title="Remove">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="pair-item" data-market="stocks" data-symbol="AAPL">
+                        <div class="pair-info">
+                            <div class="pair-icon stocks">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <div class="pair-details">
+                                <div class="pair-symbol">AAPL</div>
+                                <div class="pair-name">Apple Inc.</div>
+                            </div>
+                        </div>
+                        <div class="pair-price">
+                            <div class="price-value">$175.42</div>
+                            <div class="price-change change-positive">
+                                <i class="fas fa-arrow-up"></i>
+                                +$4.25 (+2.48%)
+                            </div>
+                        </div>
+                        <div class="timeframe-selector">
+                            <button class="timeframe-btn" data-timeframe="1m">1m</button>
+                            <button class="timeframe-btn" data-timeframe="5m">5m</button>
+                            <button class="timeframe-btn" data-timeframe="15m">15m</button>
+                            <button class="timeframe-btn active" data-timeframe="1h">1h</button>
+                            <button class="timeframe-btn" data-timeframe="4h">4h</button>
+                            <button class="timeframe-btn" data-timeframe="1d">1d</button>
+                        </div>
+                        <div class="pair-actions">
+                            <button class="action-btn" onclick="configurePair('AAPL')" title="Configure">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <button class="action-btn" onclick="viewChart('AAPL')" title="View Chart">
+                                <i class="fas fa-chart-line"></i>
+                            </button>
+                            <button class="action-btn remove" onclick="removePair('AAPL')" title="Remove">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Add more pairs here -->
+                    {% for symbol, name, market, price, change in [
+                        ('GBPUSD', 'British Pound / US Dollar', 'forex', '1.2634', '-0.0045 (-0.35%)'),
+                        ('ETHUSD', 'Ethereum', 'crypto', '$2,345', '-$45 (-1.89%)'),
+                        ('GOLD', 'Gold Futures', 'commodities', '$2,045', '+$15 (+0.75%)'),
+                        ('MSFT', 'Microsoft Corp.', 'stocks', '$378.85', '+$12.30 (+3.36%)'),
+                        ('USDJPY', 'US Dollar / Japanese Yen', 'forex', '149.85', '+0.67 (+0.45%)')
+                    ] %}
+                    <div class="pair-item" data-market="{{ market }}" data-symbol="{{ symbol }}">
+                        <div class="pair-info">
+                            <div class="pair-icon {{ market }}">
+                                {% if market == 'forex' %}
+                                    <i class="fas fa-exchange-alt"></i>
+                                {% elif market == 'crypto' %}
+                                    <i class="fab fa-ethereum"></i>
+                                {% elif market == 'commodities' %}
+                                    <i class="fas fa-coins"></i>
+                                {% else %}
+                                    <i class="fas fa-chart-bar"></i>
+                                {% endif %}
+                            </div>
+                            <div class="pair-details">
+                                <div class="pair-symbol">{{ symbol }}</div>
+                                <div class="pair-name">{{ name }}</div>
+                            </div>
+                        </div>
+                        <div class="pair-price">
+                            <div class="price-value">{{ price }}</div>
+                            <div class="price-change {% if change.startswith('+') %}change-positive{% else %}change-negative{% endif %}">
+                                <i class="fas fa-arrow-{% if change.startswith('+') %}up{% else %}down{% endif %}"></i>
+                                {{ change }}
+                            </div>
+                        </div>
+                        <div class="timeframe-selector">
+                            <button class="timeframe-btn" data-timeframe="1m">1m</button>
+                            <button class="timeframe-btn" data-timeframe="5m">5m</button>
+                            <button class="timeframe-btn active" data-timeframe="15m">15m</button>
+                            <button class="timeframe-btn" data-timeframe="1h">1h</button>
+                            <button class="timeframe-btn" data-timeframe="4h">4h</button>
+                            <button class="timeframe-btn" data-timeframe="1d">1d</button>
+                        </div>
+                        <div class="pair-actions">
+                            <button class="action-btn" onclick="configurePair('{{ symbol }}')" title="Configure">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <button class="action-btn" onclick="viewChart('{{ symbol }}')" title="View Chart">
+                                <i class="fas fa-chart-line"></i>
+                            </button>
+                            <button class="action-btn remove" onclick="removePair('{{ symbol }}')" title="Remove">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Timeframe Configuration -->
+                <div class="timeframe-config">
+                    <div class="config-title">
+                        <i class="fas fa-clock"></i>
+                        Default Timeframes for New Pairs
+                    </div>
+                    <div class="timeframe-grid">
+                        <div class="timeframe-option selected" data-timeframe="1m">
+                            <div class="timeframe-checkbox"></div>
+                            <span>1 Minute</span>
+                        </div>
+                        <div class="timeframe-option selected" data-timeframe="5m">
+                            <div class="timeframe-checkbox"></div>
+                            <span>5 Minutes</span>
+                        </div>
+                        <div class="timeframe-option selected" data-timeframe="15m">
+                            <div class="timeframe-checkbox"></div>
+                            <span>15 Minutes</span>
+                        </div>
+                        <div class="timeframe-option selected" data-timeframe="1h">
+                            <div class="timeframe-checkbox"></div>
+                            <span>1 Hour</span>
+                        </div>
+                        <div class="timeframe-option" data-timeframe="4h">
+                            <div class="timeframe-checkbox"></div>
+                            <span>4 Hours</span>
+                        </div>
+                        <div class="timeframe-option selected" data-timeframe="1d">
+                            <div class="timeframe-checkbox"></div>
+                            <span>Daily</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Available Pairs -->
+            <div class="pairs-section">
+                <h2 class="section-title">
+                    <div class="section-icon">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    Add Pairs
+                </h2>
+
+                <div class="available-pairs" id="availablePairs">
+                    {% for symbol, name, market in [
+                        ('AUDCAD', 'Australian Dollar / Canadian Dollar', 'forex'),
+                        ('NZDUSD', 'New Zealand Dollar / US Dollar', 'forex'),
+                        ('USDCHF', 'US Dollar / Swiss Franc', 'forex'),
+                        ('ADAUSD', 'Cardano', 'crypto'),
+                        ('SOLUSD', 'Solana', 'crypto'),
+                        ('DOTUSD', 'Polkadot', 'crypto'),
+                        ('TSLA', 'Tesla Inc.', 'stocks'),
+                        ('GOOGL', 'Alphabet Inc.', 'stocks'),
+                        ('AMZN', 'Amazon.com Inc.', 'stocks'),
+                        ('SILVER', 'Silver Futures', 'commodities'),
+                        ('OIL', 'Crude Oil WTI', 'commodities'),
+                        ('NATGAS', 'Natural Gas', 'commodities')
+                    ] %}
+                    <div class="add-pair-item" data-market="{{ market }}" data-symbol="{{ symbol }}">
+                        <div class="pair-info">
+                            <div class="pair-icon {{ market }}">
+                                {% if market == 'forex' %}
+                                    <i class="fas fa-exchange-alt"></i>
+                                {% elif market == 'crypto' %}
+                                    <i class="fab fa-bitcoin"></i>
+                                {% elif market == 'commodities' %}
+                                    <i class="fas fa-coins"></i>
+                                {% else %}
+                                    <i class="fas fa-chart-bar"></i>
+                                {% endif %}
+                            </div>
+                            <div class="pair-details">
+                                <div class="pair-symbol">{{ symbol }}</div>
+                                <div class="pair-name">{{ name }}</div>
+                            </div>
+                        </div>
+                        <button class="add-btn" onclick="addPair('{{ symbol }}', '{{ name }}', '{{ market }}')">
+                            <i class="fas fa-plus"></i>
+                            Add
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Market filter functionality
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            const market = this.dataset.market;
+            filterPairs(market);
+        });
+    });
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const activeMarket = document.querySelector('.filter-btn.active').dataset.market;
+        filterPairs(activeMarket, searchTerm);
+    });
+
+    function filterPairs(market, searchTerm = '') {
+        // Filter watchlist pairs
+        document.querySelectorAll('#watchlistPairs .pair-item').forEach(item => {
+            const itemMarket = item.dataset.market;
+            const symbol = item.querySelector('.pair-symbol').textContent.toLowerCase();
+            const name = item.querySelector('.pair-name').textContent.toLowerCase();
+            
+            const matchesMarket = market === 'all' || itemMarket === market;
+            const matchesSearch = searchTerm === '' || 
+                                symbol.includes(searchTerm) || 
+                                name.includes(searchTerm);
+            
+            item.style.display = matchesMarket && matchesSearch ? 'flex' : 'none';
+        });
+
+        // Filter available pairs
+        document.querySelectorAll('#availablePairs .add-pair-item').forEach(item => {
+            const itemMarket = item.dataset.market;
+            const symbol = item.querySelector('.pair-symbol').textContent.toLowerCase();
+            const name = item.querySelector('.pair-name').textContent.toLowerCase();
+            
+            const matchesMarket = market === 'all' || itemMarket === market;
+            const matchesSearch = searchTerm === '' || 
+                                symbol.includes(searchTerm) || 
+                                name.includes(searchTerm);
+            
+            item.style.display = matchesMarket && matchesSearch ? 'flex' : 'none';
+        });
+    }
+
+    // Timeframe selection for individual pairs
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('timeframe-btn')) {
+            const pairItem = e.target.closest('.pair-item');
+            const symbol = pairItem.dataset.symbol;
+            const timeframe = e.target.dataset.timeframe;
+            
+            // Remove active class from siblings
+            pairItem.querySelectorAll('.timeframe-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            e.target.classList.add('active');
+            
+            // Save timeframe preference
+            savePairTimeframe(symbol, timeframe);
+            
+            console.log(`Set ${symbol} timeframe to ${timeframe}`);
+        }
+    });
+
+    // Default timeframe configuration
+    document.querySelectorAll('.timeframe-option').forEach(option => {
+        option.addEventListener('click', function() {
+            this.classList.toggle('selected');
+            saveDefaultTimeframes();
+        });
+    });
+
+    function addPair(symbol, name, market) {
+        // Check if pair already exists
+        const existingPair = document.querySelector(`#watchlistPairs .pair-item[data-symbol="${symbol}"]`);
+        if (existingPair) {
+            showNotification(`${symbol} is already in your watchlist`, 'warning');
+            return;
+        }
+
+        // Get default timeframes
+        const defaultTimeframes = getDefaultTimeframes();
+        const activeTimeframe = defaultTimeframes.length > 0 ? defaultTimeframes[0] : '15m';
+
+        // Create new pair element
+        const pairHTML = `
+            <div class="pair-item" data-market="${market}" data-symbol="${symbol}">
+                <div class="pair-info">
+                    <div class="pair-icon ${market}">
+                        ${getMarketIcon(market)}
+                    </div>
+                    <div class="pair-details">
+                        <div class="pair-symbol">${symbol}</div>
+                        <div class="pair-name">${name}</div>
+                    </div>
+                </div>
+                <div class="pair-price">
+                    <div class="price-value">Loading...</div>
+                    <div class="price-change">
+                        <i class="fas fa-sync fa-spin"></i>
+                    </div>
+                </div>
+                <div class="timeframe-selector">
+                    <button class="timeframe-btn" data-timeframe="1m">1m</button>
+                    <button class="timeframe-btn" data-timeframe="5m">5m</button>
+                    <button class="timeframe-btn ${activeTimeframe === '15m' ? 'active' : ''}" data-timeframe="15m">15m</button>
+                    <button class="timeframe-btn ${activeTimeframe === '1h' ? 'active' : ''}" data-timeframe="1h">1h</button>
+                    <button class="timeframe-btn" data-timeframe="4h">4h</button>
+                    <button class="timeframe-btn ${activeTimeframe === '1d' ? 'active' : ''}" data-timeframe="1d">1d</button>
+                </div>
+                <div class="pair-actions">
+                    <button class="action-btn" onclick="configurePair('${symbol}')" title="Configure">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button class="action-btn" onclick="viewChart('${symbol}')" title="View Chart">
+                        <i class="fas fa-chart-line"></i>
+                    </button>
+                    <button class="action-btn remove" onclick="removePair('${symbol}')" title="Remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // Add to watchlist
+        document.getElementById('watchlistPairs').insertAdjacentHTML('beforeend', pairHTML);
+
+        // Remove from available pairs
+        const availableItem = document.querySelector(`#availablePairs .add-pair-item[data-symbol="${symbol}"]`);
+        if (availableItem) {
+            availableItem.remove();
+        }
+
+        // Update count
+        updateWatchlistCount();
+
+        // Fetch real price data
+        fetchPairPrice(symbol);
+
+        showNotification(`${symbol} added to watchlist`, 'success');
+    }
+
+    function removePair(symbol) {
+        const pairItem = document.querySelector(`#watchlistPairs .pair-item[data-symbol="${symbol}"]`);
+        if (pairItem) {
+            const market = pairItem.dataset.market;
+            const name = pairItem.querySelector('.pair-name').textContent;
+            
+            // Remove from watchlist
+            pairItem.remove();
+            
+            // Add back to available pairs
+            const availablePairsContainer = document.getElementById('availablePairs');
+            const addPairHTML = `
+                <div class="add-pair-item" data-market="${market}" data-symbol="${symbol}">
+                    <div class="pair-info">
+                        <div class="pair-icon ${market}">
+                            ${getMarketIcon(market)}
+                        </div>
+                        <div class="pair-details">
+                            <div class="pair-symbol">${symbol}</div>
+                            <div class="pair-name">${name}</div>
+                        </div>
+                    </div>
+                    <button class="add-btn" onclick="addPair('${symbol}', '${name}', '${market}')">
+                        <i class="fas fa-plus"></i>
+                        Add
+                    </button>
+                </div>
+            `;
+            
+            availablePairsContainer.insertAdjacentHTML('beforeend', addPairHTML);
+            
+            // Update count
+            updateWatchlistCount();
+            
+            showNotification(`${symbol} removed from watchlist`, 'info');
+        }
+    }
+
+    function getMarketIcon(market) {
+        const icons = {
+            'forex': '<i class="fas fa-exchange-alt"></i>',
+            'crypto': '<i class="fab fa-bitcoin"></i>',
+            'stocks': '<i class="fas fa-chart-bar"></i>',
+            'commodities': '<i class="fas fa-coins"></i>'
+        };
+        return icons[market] || '<i class="fas fa-chart-line"></i>';
+    }
+
+    function getDefaultTimeframes() {
+        const selected = [];
+        document.querySelectorAll('.timeframe-option.selected').forEach(option => {
+            selected.push(option.dataset.timeframe);
+        });
+        return selected;
+    }
+
+    function updateWatchlistCount() {
+        const count = document.querySelectorAll('#watchlistPairs .pair-item').length;
+        document.getElementById('watchlistCount').textContent = count;
+    }
+
+    function configurePair(symbol) {
+        // Open configuration modal or navigate to configuration page
+        console.log('Configure pair:', symbol);
+        showNotification(`Opening configuration for ${symbol}`, 'info');
+    }
+
+    function viewChart(symbol) {
+        // Navigate to chart view
+        window.open(`/chart/${symbol}`, '_blank');
+    }
+
+    function savePairTimeframe(symbol, timeframe) {
+        // Save to localStorage or send to server
+        const preferences = JSON.parse(localStorage.getItem('pairTimeframes') || '{}');
+        preferences[symbol] = timeframe;
+        localStorage.setItem('pairTimeframes', JSON.stringify(preferences));
+    }
+
+    function saveDefaultTimeframes() {
+        const selected = getDefaultTimeframes();
+        localStorage.setItem('defaultTimeframes', JSON.stringify(selected));
+        showNotification('Default timeframes updated', 'success');
+    }
+
+    function saveWatchlist() {
+        const pairs = [];
+        document.querySelectorAll('#watchlistPairs .pair-item').forEach(item => {
+            const symbol = item.dataset.symbol;
+            const market = item.dataset.market;
+            const activeTimeframe = item.querySelector('.timeframe-btn.active')?.dataset.timeframe || '15m';
+            
+            pairs.push({
+                symbol,
+                market,
+                timeframe: activeTimeframe
+            });
+        });
+        
+        // Save to server
+        console.log('Saving watchlist:', pairs);
+        showNotification('Watchlist saved successfully', 'success');
+    }
+
+    function addAllRecommended() {
+        const recommended = ['EURUSD', 'GBPUSD', 'BTCUSD', 'ETHUSD', 'AAPL', 'TSLA'];
+        let added = 0;
+        
+        recommended.forEach(symbol => {
+            const availableItem = document.querySelector(`#availablePairs .add-pair-item[data-symbol="${symbol}"]`);
+            if (availableItem) {
+                const name = availableItem.querySelector('.pair-name').textContent;
+                const market = availableItem.dataset.market;
+                addPair(symbol, name, market);
+                added++;
+            }
+        });
+        
+        if (added > 0) {
+            showNotification(`Added ${added} recommended pairs`, 'success');
+        } else {
+            showNotification('All recommended pairs are already in your watchlist', 'info');
+        }
+    }
+
+    function fetchPairPrice(symbol) {
+        // Simulate fetching real price data
+        setTimeout(() => {
+            const pairItem = document.querySelector(`#watchlistPairs .pair-item[data-symbol="${symbol}"]`);
+            if (pairItem) {
+                const priceElement = pairItem.querySelector('.price-value');
+                const changeElement = pairItem.querySelector('.price-change');
+                
+                // Simulate price data
+                const prices = {
+                    'AUDCAD': { price: '0.9123', change: '+0.0012 (+0.13%)', positive: true },
+                    'NZDUSD': { price: '0.6234', change: '-0.0023 (-0.37%)', positive: false },
+                    'USDCHF': { price: '0.8756', change: '+0.0034 (+0.39%)', positive: true },
+                    'ADAUSD': { price: '$0.4523', change: '+$0.0123 (+2.79%)', positive: true },
+                    'SOLUSD': { price: '$67.45', change: '+$3.20 (+4.98%)', positive: true },
+                    'DOTUSD': { price: '$5.67', change: '-$0.23 (-3.89%)', positive: false },
+                    'TSLA': { price: '$248.50', change: '+$12.30 (+5.21%)', positive: true },
+                    'GOOGL': { price: '$142.65', change: '+$2.45 (+1.75%)', positive: true },
+                    'AMZN': { price: '$153.20', change: '-$1.80 (-1.16%)', positive: false },
+                    'SILVER': { price: '$24.85', change: '-$0.45 (-1.78%)', positive: false },
+                    'OIL': { price: '$78.90', change: '+$2.10 (+2.73%)', positive: true },
+                    'NATGAS': { price: '$2.85', change: '-$0.12 (-4.04%)', positive: false }
+                };
+                
+                const data = prices[symbol] || { price: '$0.00', change: '+$0.00 (+0.00%)', positive: true };
+                
+                priceElement.textContent = data.price;
+                changeElement.innerHTML = `
+                    <i class="fas fa-arrow-${data.positive ? 'up' : 'down'}"></i>
+                    ${data.change}
+                `;
+                changeElement.className = `price-change ${data.positive ? 'change-positive' : 'change-negative'}`;
+            }
+        }, 1000);
+    }
+
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? 'var(--success-green)' : 
+                        type === 'warning' ? 'var(--wealth-gold)' : 
+                        type === 'error' ? 'var(--danger-red)' : 'var(--primary-blue)'};
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    // Load saved preferences on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load saved timeframe preferences
+        const preferences = JSON.parse(localStorage.getItem('pairTimeframes') || '{}');
+        Object.entries(preferences).forEach(([symbol, timeframe]) => {
+            const pairItem = document.querySelector(`#watchlistPairs .pair-item[data-symbol="${symbol}"]`);
+            if (pairItem) {
+                pairItem.querySelectorAll('.timeframe-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.timeframe === timeframe) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+        });
+
+        // Load default timeframes
+        const defaultTimeframes = JSON.parse(localStorage.getItem('defaultTimeframes') || '["1m","5m","15m","1h","1d"]');
+        document.querySelectorAll('.timeframe-option').forEach(option => {
+            if (defaultTimeframes.includes(option.dataset.timeframe)) {
+                option.classList.add('selected');
+            } else {
+                option.classList.remove('selected');
+            }
+        });
+    });
+
+    // Add CSS for slide animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+{% endblock %}

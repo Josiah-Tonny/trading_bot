@@ -21,6 +21,7 @@ sys.path.insert(0, project_root)
 # Initialize Flask app FIRST
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
+app.config['DEBUG'] = os.getenv('DEBUG', 'False') == 'True'
 app.config['TELEGRAM_BOT_TOKEN'] = os.getenv('TELEGRAM_BOT_TOKEN')
 
 # Explicit session configuration to fix cookie issues
@@ -208,7 +209,7 @@ def perform_password_reset(token, new_password):
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password_route():
     if request.method == 'POST':
-        email = request.form.get('email')
+        email = request.form.get('email') 
         token = forgot_password(email)
         if token:
             flash(f"Password reset link sent to {email}. (Token: {token})", "info")
@@ -258,7 +259,17 @@ def signals():
 @app.route('/portfolio')
 @login_required
 def portfolio():
-    return render_template('portfolio.html')
+    wining_position=0
+    losing_position=0
+    open_positions = 12  # Example value, replace with actual logic
+    
+    context={
+        
+        'wining_position':wining_position,
+        'losing_position':losing_position,
+        'open_positions':open_positions
+    }
+    return render_template('portfolio.html', context=context)
 
 @app.route('/trade')
 @login_required
