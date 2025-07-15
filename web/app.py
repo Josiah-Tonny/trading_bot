@@ -251,6 +251,35 @@ def logout():
     session.clear()
     return redirect(url_for('index'))
 
+@app.route('/profile')
+def profile():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    if 'user_id' not in session:
+        flash('User ID not found in session', 'danger')
+        return redirect(url_for('login'))
+    user_id = session['user_id']
+    from app.models.user import UserService
+    user_service = UserService()
+    user = user_service.get_user_by_id(user_id)
+    if not user:
+        flash('User not found', 'danger')
+        return redirect(url_for('login'))
+    if request.method == 'POST':
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
+        phone_number = request.form.get('phone_number')
+        username = request.form.get('username')
+        
+        try:
+            user_service.update_user(user_id, first_name=first_name, last_name=last_name,
+                                     phone_number=phone_number, username=username)
+            flash('Profile updated successfully', 'success')
+        except ValueError as e:
+            flash(str(e), 'danger')
+        
+    return render_template('profile.html', user=user)
+
 @app.route('/signals')
 @login_required
 def signals():
@@ -287,6 +316,24 @@ def terms():
 @app.route('/privacy')
 def privacy():
     return render_template('privacy.html')
+
+@app.route('/watchlist')
+@login_required
+def watchlist():
+    return render_template('watchlist.html')
+
+@app.route('/analysis')
+@login_required
+def analysis():
+    return render_template('analysis.html')
+
+@app.route('/demo')
+def demo():
+    return render_template('demo.html')
+
+
+
+
 
 # API endpoints
 @app.route('/webhook/stripe', methods=['POST'])

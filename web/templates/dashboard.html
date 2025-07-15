@@ -463,7 +463,7 @@
     .dark .news-meta {
         color: var(--dark-muted);
     }
-
+ 
     .news-source {
         font-weight: 500;
     }
@@ -575,7 +575,7 @@
                             {'symbol': 'USD/CAD', 'name': 'US Dollar / Canadian Dollar', 'price': '1.3789', 'change': '-0.0034', 'change_percent': '-0.25%'}
                         ] %}
                         {% for pair in forex_pairs %}
-                        <div class="market-item btn btn-outline btn-sm" onclick="window.location.href='{{ url_for('trade', symbol=pair.symbol) }}'" style="cursor: pointer;">
+                        <div class="market-item btn btn-outline btn-sm" onclick="window.location.href='{{ url_for('trade') }}'" style="cursor: pointer;">
                             <div>
                                 <div class="market-symbol">{{ pair.symbol }}</div>
                                 <div class="market-name">{{ pair.name }}</div>
@@ -612,7 +612,7 @@
                             {'symbol': 'ADA', 'name': 'Cardano', 'price': '$0.4523', 'change': '-$0.0123', 'change_percent': '-2.65%'}
                         ] %}
                         {% for coin in crypto_coins %}
-                        <div class="market-item btn btn-outline btn-sm" onclick="window.location.href='{{ url_for('trade', symbol=coin.symbol) }}'" style="cursor: pointer;">
+                        <div class="market-item btn btn-outline btn-sm" onclick="window.location.href='{{ url_for('trade') }}'" style="cursor: pointer;">
                             <div>
                                 <div class="market-symbol">{{ coin.symbol }}</div>
                                 <div class="market-name">{{ coin.name }}</div>
@@ -649,7 +649,7 @@
                             {'symbol': 'COPPER', 'name': 'Copper Futures', 'price': '$3.78', 'change': '+$0.08', 'change_percent': '+2.16%'}
                         ] %}
                         {% for commodity in commodities %}
-                        <div class="market-item btn btn-outline btn-sm" onclick="window.location.href='{{ url_for('trade', symbol=commodity.symbol) }}'" style="cursor: pointer;">
+                        <div class="market-item btn btn-outline btn-sm" onclick="window.location.href='{{ url_for('trade') }}'" style="cursor: pointer;">
                             <div>
                                 <div class="market-symbol">{{ commodity.symbol }}</div>
                                 <div class="market-name">{{ commodity.name }}</div>
