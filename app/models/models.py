@@ -1,4 +1,5 @@
-from sqlalchemy import String, BigInteger, ForeignKey, DateTime, Boolean, Float, Text, create_engine, text
+from sqlalchemy import String, BigInteger, ForeignKey, DateTime, Boolean, Float, Text, Integer, create_engine, text
+from datetime import datetime, timezone
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
 from datetime import datetime
 from typing import Optional, List
@@ -19,6 +20,10 @@ class User(Base):
     last_name: Mapped[Optional[str]] = mapped_column(String(100))
     phone: Mapped[Optional[str]] = mapped_column(String(20))
     username: Mapped[Optional[str]] = mapped_column(String(100))
+    is_locked: Mapped[bool] = mapped_column(Boolean, default=False)
+    locked_until: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    otp_secret: Mapped[Optional[str]] = mapped_column(String(32))
+    two_factor_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     risk_tolerance: Mapped[str] = mapped_column(String(20), default='moderate')
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
     subscription_status: Mapped[str] = mapped_column(String(20), default='inactive')
@@ -31,13 +36,32 @@ class User(Base):
     profile_picture: Mapped[Optional[str]] = mapped_column(String(500))  # Telegram photo URL
     telegram_username: Mapped[Optional[str]] = mapped_column(String(100))  # Telegram @username
     
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
     subscriptions: Mapped[List["Subscription"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    payments: Mapped[List["Payment"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
     @property
+    def is_premium(self) -> bool:
+        """Check if user has premium subscription"""
+        return (
+            self.subscription_status == 'active' and
+            bool(self.subscriptions) and
+            any(s.tier == 'premium' for s in self.subscriptions)
+        )
+        
+    @property
+    def full_name(self) -> str:
+        """Get user's full name or username"""
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        elif self.first_name:
+            return self.first_name
+        elif self.username:
+            return self.username
+        return f"User {self.id}"
     def full_name(self) -> str:
         if self.first_name and self.last_name:
             return f"{self.first_name} {self.last_name}"
@@ -60,7 +84,7 @@ class User(Base):
     def is_subscription_active(self) -> bool:
         return bool(self.subscription_status == 'active' and 
                 self.subscription_expiry and 
-                self.subscription_expiry > datetime.utcnow())
+                self.subscription_expiry > datetime.now(timezone.utc))
 
     def __repr__(self):
         identifier = self.email or self.telegram_user_id or self.username
@@ -71,14 +95,51 @@ class Subscription(Base):
     
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
-    tier: Mapped[str] = mapped_column(String(50))
-    symbols: Mapped[Optional[str]] = mapped_column(Text)
-    timeframes: Mapped[Optional[str]] = mapped_column(Text)
+    tier: Mapped[str] = mapped_column(String(50))  # 'free', 'pro', 'premium'
+    symbols: Mapped[Optional[str]] = mapped_column(Text)  # JSON list of subscribed symbols
+    timeframes: Mapped[Optional[str]] = mapped_column(Text)  # JSON list of subscribed timeframes
     capital: Mapped[float] = mapped_column(Float, default=0.0)
-    start_date: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    
+    # Subscription timing
+    start_date: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
     end_date: Mapped[Optional[datetime]] = mapped_column(DateTime)
     payment_status: Mapped[str] = mapped_column(String(20), default='pending')
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    # Free tier specific fields
+    trial_used: Mapped[bool] = mapped_column(Boolean, default=False)
+    daily_access_hours: Mapped[Optional[str]] = mapped_column(String(50))  # Format: "HH:MM-HH:MM"
+    daily_access_start: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    daily_access_end: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    
+    # AI consultation related fields
+    ai_consultation_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    ai_requests_count: Mapped[int] = mapped_column(Integer, default=0)
+    last_ai_request: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    
+    # Signal management
+    signal_credits: Mapped[int] = mapped_column(Integer, default=0)  # Available signal changes
+    signal_changes_made: Mapped[int] = mapped_column(Integer, default=0)  # Count of signal changes made
+    last_signal_change: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    allowed_signal_count: Mapped[int] = mapped_column(Integer, default=1)  # Number of custom signals allowed
+    
+    # Features and settings
+    features: Mapped[Optional[str]] = mapped_column(Text)  # JSON string of enabled features
+    risk_profile: Mapped[str] = mapped_column(String(20), default='moderate')  # User's risk tolerance for signals
+    notifications_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    
+    # Educational access (Pro/Premium)
+    education_access_level: Mapped[int] = mapped_column(Integer, default=0)  # 0: None, 1: Basic, 2: Advanced
+    webinar_credits: Mapped[int] = mapped_column(Integer, default=0)  # For premium tier live sessions
+    
+    # Trading features
+    backtesting_enabled: Mapped[bool] = mapped_column(Boolean, default=False)  # For premium tier
+    portfolio_optimization_enabled: Mapped[bool] = mapped_column(Boolean, default=False)  # For premium tier
+    custom_strategy_enabled: Mapped[bool] = mapped_column(Boolean, default=False)  # For premium tier
+    priority_alerts: Mapped[bool] = mapped_column(Boolean, default=False)  # For premium tier
+    
+    # Relationship
+    user: Mapped["User"] = relationship(back_populates="subscriptions")
 
     # Relationships
     user: Mapped["User"] = relationship(back_populates="subscriptions")
@@ -86,8 +147,21 @@ class Subscription(Base):
     def __repr__(self):
         return f'<Subscription {self.tier} for User {self.user_id}>'
 
-# Database setup
-# Go up 3 levels: models -> app -> trading_bot, then into web
+class Payment(Base):
+    __tablename__ = 'payments'
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    amount: Mapped[float] = mapped_column(Float)
+    type: Mapped[str] = mapped_column(String(50))  # subscription, signal_change, etc.
+    status: Mapped[str] = mapped_column(String(20))  # completed, pending, failed
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    payment_method: Mapped[str] = mapped_column(String(50))  # stripe, mpesa, etc.
+    transaction_id: Mapped[Optional[str]] = mapped_column(String(100))
+    provider_response: Mapped[Optional[str]] = mapped_column(Text)  # Store provider's response
+
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="payments")
 db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'web', 'trading_bot.db')
 DATABASE_URL = f"sqlite:///{db_path}"
 

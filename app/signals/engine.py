@@ -7,10 +7,24 @@ from app.risk_manager import calculate_position_size
 from app.utils import timeframes, logger
 
 class SignalEngine:
-    def __init__(self, symbol: str, timeframe: str) -> None:
+    def __init__(self, symbol: str, timeframe: str, subscription_tier: SubscriptionTier) -> None:
         self.symbol = symbol
         self.timeframe = timeframe
+        self.tier = subscription_tier
         self.data = self._fetch_and_preprocess_data()
+        
+        # Initialize advanced features based on tier
+        self._setup_tier_features()
+
+    def _setup_tier_features(self) -> None:
+        """Configure available features based on subscription tier"""
+        self.features = self.tier.features
+        self.limits = self.tier.signal_limits
+        
+        # Enable/disable advanced indicators
+        self.use_advanced_indicators = self.features.get('advanced_signals', False)
+        self.use_portfolio_optimization = self.features.get('portfolio_optimization', False)
+        self.use_risk_analysis = self.features.get('risk_analysis', False)
 
     def _fetch_and_preprocess_data(self) -> pd.DataFrame:
         """Fetch and prepare OHLC data"""
@@ -202,10 +216,104 @@ class SignalEngine:
         return true_range.rolling(period).mean()
 
     # Signal Generation --------------------------------------------------------
-    def generate_signal(
-        self, capital: float = 10, risk_profile: str = "standard"
-    ) -> Dict[str, Any]:
-        """Generate comprehensive trade signal"""
+    def generate_signal_with_permissions(
+        self, capital: float = 10000, risk_profile: str = "standard"
+    ) -> SignalResult:
+        """Generate signals with tier-appropriate analysis"""
+        base_signal = self._generate_base_signal(capital, risk_profile)
+        permissions = self._get_permissions()
+        
+        if self.use_advanced_indicators:
+            advanced = self._generate_advanced_analysis()
+        else:
+            advanced = None
+            
+        return {
+            "signal": base_signal,
+            "permissions": permissions,
+            "advanced_analysis": advanced
+        }
+
+    def _get_permissions(self) -> SignalPermissions:
+        """Get current signal permissions based on subscription tier"""
+        return {
+            "custom_signals_remaining": self.limits['custom_signals'],
+            "allowed_timeframes": self.limits['timeframes'],
+            "requests_remaining": self.limits['requests_per_hour'],
+            "advanced_indicators": self.use_advanced_indicators,
+            "portfolio_optimization": self.use_portfolio_optimization,
+            "risk_analysis": self.use_risk_analysis
+        }
+
+    def _generate_base_signal(
+        self, capital: float, risk_profile: str
+    ) -> TradingSignal:
+        """Generate basic trading signal with essential indicators"""
+        # Calculate core indicators
+        sma20 = self.data['close'].rolling(window=20).mean()
+        sma50 = self.data['close'].rolling(window=50).mean()
+        rsi = self.calculate_rsi()
+        k, d = self.calculate_stochastic_oscillator()
+        
+        # Get current values
+        current_close = self.data['close'].iloc[-1]
+        current_rsi = rsi.iloc[-1]
+        current_k = k.iloc[-1]
+        current_d = d.iloc[-1]
+        
+        # Generate signal components
+        signal: TradingSignal = {
+            "symbol": self.symbol,
+            "timeframe": self.timeframe,
+            "action": "hold",  # Will be updated based on analysis
+            "entry": current_close,
+            "tp": [],  # Will be filled based on analysis
+            "sl": 0,  # Will be updated based on ATR
+            "confidence": 0,
+            "timestamp": pd.Timestamp.now(),
+            "indicators": self._get_indicators(),
+            "trade_info": {
+                "time_period": self.timeframe,
+                "risk_profile": risk_profile,
+                "market_conditions": self._get_market_conditions()
+            }
+        }
+        
+        # Add position sizing if signal generated
+        signal = self._add_position_sizing(signal, capital, risk_profile)
+        
+        return signal
+
+    def _get_indicators(self) -> SignalIndicators:
+        """Get current values of all indicators"""
+        return {
+            "rsi": self.calculate_rsi().iloc[-1],
+            "adx": self.calculate_adx()[0].iloc[-1],
+            "stoch_k": self.calculate_stochastic_oscillator()[0].iloc[-1],
+            "stoch_d": self.calculate_stochastic_oscillator()[1].iloc[-1],
+            "atr": self.calculate_atr().iloc[-1],
+            "std_dev": self.calculate_standard_deviation().iloc[-1],
+            "macd": self.calculate_macd()[0].iloc[-1],
+            "signal_line": self.calculate_macd()[1].iloc[-1],
+            "histogram": self.calculate_macd()[2].iloc[-1]
+        }
+
+    def _generate_advanced_analysis(self) -> Dict[str, Any]:
+        """Generate advanced analysis for pro/premium tiers"""
+        if not self.use_advanced_indicators:
+            return {}
+            
+        analysis = {}
+        
+        # Add portfolio optimization if available
+        if self.use_portfolio_optimization:
+            analysis["portfolio"] = self._get_portfolio_analysis()
+            
+        # Add risk analysis if available
+        if self.use_risk_analysis:
+            analysis["risk"] = self._get_risk_analysis()
+            
+        return analysis
         # Calculate all indicators
         self.data['sma20'] = self.calculate_sma(20)
         self.data['sma50'] = self.calculate_sma(50)

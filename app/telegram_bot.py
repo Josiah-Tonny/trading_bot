@@ -6,17 +6,26 @@ from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
     MessageHandler,
-    CallbackContext,
     filters,
     CallbackQueryHandler,
+    ContextTypes,
 )
 from telegram import Update
+from typing import Dict, Any, Optional
+from contextlib import asynccontextmanager
+
+class ExtendedContext(ContextTypes.DEFAULT_TYPE):
+    """Extended context type with proper user_data typing"""
+    @property
+    def user_data(self) -> Optional[Dict[str, Any]]:
+        return self.user_data_
 import logging
 from dotenv import load_dotenv
 from app.handlers.subscribe_command import subscribe_command, subscribe_callback_handler
 from app.handlers.change_symbol import change_symbol_command
 from app.signals.engine import generate_daily_signals
-from app.models.user import get_user_by_telegram_id, create_user
+from app.models.user import User, UserOperations
+from app.database import AsyncSession, get_session
 from app.auth import authenticate
 from app.payments import process_payment_code
 import re
@@ -38,16 +47,72 @@ TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 # If the user does not exist, we create a new user with their Telegram profile.
 # This enables seamless linking between Telegram and web dashboard.
 
-async def start(update: Update, context: CallbackContext) -> None:
+async def start(update: Update, context: ExtendedContext) -> None:
     if update.message:
-        telegram_profile = {
-            "id": update.effective_user.id,
-            "username": update.effective_user.username,
-            "first_name": update.effective_user.first_name,
-            "last_name": update.effective_user.last_name,
+        telegram_id = update.effective_user.id
+        async with get_session() as session:
+            user_ops = UserOperations(session)
+            
+            # Check if user exists
+            user = await user_ops.get_by_telegram_id(telegram_id)
+            if user:
+                await update.message.reply_text(
+                    "Welcome back! You can use /help to see available commands."
+                )
+            else:
+                # Start registration process
+                context.user_data['registration_step'] = 'email'
+                await update.message.reply_text(
+                    "Welcome to Alpha Pro Trader! Let's set up your account.\n"
+                    "Please enter your email address:"
+                )
+
+async def handle_registration(update: Update, context: CallbackContext) -> None:
+    if not update.message or not update.message.text:
+        return
+
+    session = get_session()
+    auth_handler = AuthHandler(session)
+    step = context.user_data.get('registration_step')
+    text = update.message.text.strip()
+
+    if step == 'email':
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", text):
+            await update.message.reply_text("Please enter a valid email address.")
+            return
+        
+        context.user_data['email'] = text
+        context.user_data['registration_step'] = 'password'
+        await update.message.reply_text(
+            "Great! Now please enter a password (minimum 8 characters):"
+        )
+    
+    elif step == 'password':
+        if len(text) < 8:
+            await update.message.reply_text("Password must be at least 8 characters long.")
+            return
+        
+        # Register user
+        auth_data = {
+            'email': context.user_data['email'],
+            'password': text,
+            'telegram_id': update.effective_user.id
         }
-        user = authenticate(telegram_profile=telegram_profile)
-        await update.message.reply_text("Welcome to the trading bot! Your Telegram account is now linked.")
+        
+        result = await auth_handler.register_user(auth_data)
+        if result.success:
+            await update.message.reply_text(
+                "Registration successful! Your Telegram account is now linked.\n"
+                "Use /help to see available commands."
+            )
+        else:
+            await update.message.reply_text(
+                f"Registration failed: {result.message}\n"
+                "Please try again with /start"
+            )
+        
+        # Clear registration data
+        context.user_data.clear()
 
 async def help_command(update: Update, context: CallbackContext) -> None:
     if update.message:

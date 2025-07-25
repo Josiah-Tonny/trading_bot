@@ -1,212 +1,285 @@
-from sqlalchemy.orm import Session
-from app.models.models import User, Subscription, SessionLocal
-from typing import Optional, List, Dict
-from datetime import datetime, timedelta
-import json
-import hashlib
-import secrets
-import string
-import logging
+from typing import Optional, Dict, Any, TypedDict, Final, Union, List
+from datetime import datetime, timezone
+import enum
+from decimal import Decimal
+from dataclasses import dataclass
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, Integer, Boolean, DateTime, Float, ForeignKey, Enum, BigInteger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql import select
 
-logger = logging.getLogger(__name__)
+from app.models.base import DatabaseModel, DatabaseOperations
 
-class UserService:
-    def __init__(self):
-        self.db = SessionLocal()
+# Signal limit types
+class SignalLimits(TypedDict):
+    custom_signals: Union[int, float]
+    random_signals: Union[int, float]
+    requests_per_hour: int
+    timeframes: List[str]
+    educational_content_access: Optional[List[str]]
 
-    def __enter__(self):
-        return self
+# Signal limits and fees constants
+TIER_SIGNAL_LIMITS: Final[Dict[str, SignalLimits]] = {
+    'free': {
+        'custom_signals': 1,
+        'random_signals': 2,
+        'requests_per_hour': 10,
+        'timeframes': ['1h', '4h', '1d'],
+        'educational_content_access': ['beginner']
+    },
+    'pro': {
+        'custom_signals': 5,
+        'random_signals': 5,
+        'requests_per_hour': 100,
+        'timeframes': ['15m', '1h', '4h', '1d'],
+        'educational_content_access': ['beginner', 'intermediate']
+    },
+    'premium': {
+        'custom_signals': float('inf'),
+        'random_signals': float('inf'),
+        'requests_per_hour': 500,
+        'timeframes': ['5m', '15m', '1h', '4h', '1d'],
+        'educational_content_access': ['beginner', 'intermediate', 'advanced', 'expert']
+    }
+}
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.db.close()
-        
-        
-    def get_user_by_id(self, user_id: int) -> Optional[User]:
-        return self.db.query(User).filter(User.id == user_id).first()
+SIGNAL_CHANGE_FEES: Final[Dict[str, Decimal]] = {
+    'free': Decimal('3.00'),
+    'pro': Decimal('1.50'),
+    'premium': Decimal('0.00')
+}
 
-    def get_user_by_email(self, email: str) -> Optional[User]:
-        return self.db.query(User).filter(User.email == email.lower()).first()
+# Custom type definitions
+class FeatureSet(TypedDict, total=False):
+    """Features available for each subscription tier"""
+    sentiment_analysis: bool
+    basic_signals: bool
+    advanced_signals: Optional[bool]
+    risk_analysis: bool
+    portfolio_optimization: bool
+    custom_strategy: Optional[bool]
 
-    def get_user_by_telegram_id(self, telegram_id: int) -> Optional[User]:
-        return self.db.query(User).filter(User.telegram_user_id == telegram_id).first()
+class TelegramData(TypedDict, total=True):
+    """Telegram user data structure"""
+    telegram_user_id: int
+    username: Optional[str]
+    first_name: Optional[str]
+    last_name: Optional[str]
 
-    def create_user(self, email: Optional[str] = None, password: Optional[str] = None, 
-                   telegram_id: Optional[int] = None, **kwargs) -> User:
-        # Check if user already exists
-        if email:
-            existing_user = self.get_user_by_email(email)
-            if existing_user:
-                raise ValueError("User with this email already exists")
+class SubscriptionTier(str, enum.Enum):
+    """Available subscription tiers"""
+    FREE = "free"
+    PRO = "pro"
+    PREMIUM = "premium"
 
-        if telegram_id:
-            existing_user = self.get_user_by_telegram_id(telegram_id)
-            if existing_user:
-                return existing_user  # Return existing Telegram user
-
-        # Create new user
-        user = User(
-            email=email.lower() if email else None,
-            password_hash=self._hash_password(password) if password else None,
-            telegram_user_id=telegram_id,
-            registration_method='telegram' if telegram_id else 'email',
-            is_active=True if telegram_id else False,  # Telegram users are auto-activated
-            **kwargs
-        )
-        
-        self.db.add(user)
-        self.db.commit()
-        self.db.refresh(user)
-        return user
-
-    def create_telegram_user(self, telegram_data: Dict) -> User:
-        """
-        Create or update a user from Telegram authentication data
-        """
-        telegram_user_id = telegram_data.get('telegram_user_id')
-        
-        if not telegram_user_id:
-            raise ValueError("Invalid Telegram user ID")
-
-        # Check if user already exists
-        existing_user = self.get_user_by_telegram_id(telegram_user_id)
-        
-        if existing_user:
-            # Update existing user with latest Telegram data
-            existing_user.first_name = telegram_data.get('first_name') or existing_user.first_name
-            existing_user.last_name = telegram_data.get('last_name') or existing_user.last_name
-            existing_user.telegram_username = telegram_data.get('telegram_username') or existing_user.telegram_username
-            existing_user.profile_picture = telegram_data.get('profile_picture') or existing_user.profile_picture
-            existing_user.updated_at = datetime.utcnow()
-            
-            self.db.commit()
-            self.db.refresh(existing_user)
-            return existing_user
-
-        # Create new user
-        user = User(
-            telegram_user_id=telegram_user_id,
-            first_name=telegram_data.get('first_name', ''),
-            last_name=telegram_data.get('last_name', ''),
-            telegram_username=telegram_data.get('telegram_username', ''),
-            username=telegram_data.get('telegram_username') or f"tg_user_{telegram_user_id}",
-            profile_picture=telegram_data.get('profile_picture', ''),
-            registration_method='telegram',
-            is_active=True,  # Telegram users are automatically activated
-            risk_tolerance='moderate'  # Default risk tolerance
-        )
-        
-        self.db.add(user)
-        self.db.commit()
-        self.db.refresh(user)
-        
-        logger.info(f"Created new Telegram user: {user.id} (TG: {telegram_user_id})")
-        return user
-
-    def authenticate_telegram_user(self, telegram_user_id: int) -> Optional[User]:
-        """
-        Authenticate user by Telegram ID
-        """
-        return self.db.query(User).filter(
-            User.telegram_user_id == telegram_user_id,
-            User.is_active == True
-        ).first()
-
-    def update_user(self, user: User, **kwargs) -> User:
-        for key, value in kwargs.items():
-            if hasattr(user, key):
-                setattr(user, key, value)
-        user.updated_at = datetime.utcnow()
-        self.db.commit()
-        self.db.refresh(user)
-        return user
-
-    def activate_user_subscription(self, user_id: int, duration_days: int = 30) -> Optional[User]:
-        user = self.get_user_by_id(user_id)
-        if not user:
-            return None
-        
-        user.is_active = True
-        user.subscription_status = 'active'
-        user.subscription_expiry = datetime.utcnow() + timedelta(days=duration_days)
-        
-        # Create subscription record
-        subscription = Subscription(
-            user_id=user.id,
-            tier='basic',
-            symbols=json.dumps(["EURUSD"]),
-            timeframes=json.dumps(["1h"]),
-            capital=100.0,
-            end_date=user.subscription_expiry,
-            payment_status='completed'
-        )
-        
-        self.db.add(subscription)
-        self.db.commit()
-        self.db.refresh(user)
-        return user
-
-    def set_password_reset_token(self, email: str) -> Optional[str]:
-        user = self.get_user_by_email(email)
-        if not user:
-            return None
-        
-        token = "APT" + ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-        user.reset_token = token
-        user.reset_token_expiry = datetime.utcnow() + timedelta(hours=1)
-        
-        self.db.commit()
-        return token
-
-    def reset_password(self, token: str, new_password: str) -> bool:
-        user = self.db.query(User).filter(
-            User.reset_token == token,
-            User.reset_token_expiry > datetime.utcnow()
-        ).first()
-        
-        if user:
-            user.password_hash = self._hash_password(new_password)
-            user.reset_token = None
-            user.reset_token_expiry = None
-            self.db.commit()
-            return True
-        return False
-
-    def authenticate_user(self, email: str, password: str) -> Optional[User]:
-        user = self.get_user_by_email(email)
-        if user and user.password_hash == self._hash_password(password):
-            return user
-        return None
-
-    def _hash_password(self, password: str) -> str:
-        """Hash password using SHA-256 (use bcrypt in production)"""
-        return hashlib.sha256(password.encode()).hexdigest()
-
-# Convenience functions for backward compatibility
-def get_user_by_email(email: str) -> Optional[User]:
-    with UserService() as service:
-        return service.get_user_by_email(email)
-
-def get_user_by_telegram_id(telegram_id: int) -> Optional[User]:
-    with UserService() as service:
-        return service.get_user_by_telegram_id(telegram_id)
-
-def create_user(email: Optional[str] = None, password: Optional[str] = None, 
-               telegram_id: Optional[int] = None, **kwargs) -> User:
-    with UserService() as service:
-        return service.create_user(email, password, telegram_id, **kwargs)
-
-def activate_user_subscription(user_id: int, duration_days: int = 30) -> Optional[User]:
-    with UserService() as service:
-        return service.activate_user_subscription(user_id, duration_days)
-
-def get_user_by_id(user_id: int) -> Optional[User]:
-    with UserService() as service:
-        return service.get_user_by_id(user_id)
-
-def set_password_reset_token(email: str) -> Optional[str]:
-    with UserService() as service:
-        return service.set_password_reset_token(email)
+    @property
+    def features(self) -> FeatureSet:
+        """Get features for this tier"""
+        return TIER_FEATURES[self]
     
-def reset_password(token: str, new_password: str) -> bool:
-    with UserService() as service:
-        return service.reset_password(token, new_password)
+    @property
+    def signal_limits(self) -> SignalLimits:
+        """Get signal generation limits for this tier"""
+        return TIER_SIGNAL_LIMITS[self.value]
+    
+    @property
+    def signal_change_fee(self) -> Decimal:
+        """Get signal change fee for this tier"""
+        return SIGNAL_CHANGE_FEES[self.value]
+
+TIER_FEATURES: Dict[SubscriptionTier, FeatureSet] = {
+    SubscriptionTier.FREE: {
+        'sentiment_analysis': True,
+        'basic_signals': True,
+        'risk_analysis': False,
+        'portfolio_optimization': False
+    },
+    SubscriptionTier.PRO: {
+        'sentiment_analysis': True,
+        'basic_signals': True,
+        'advanced_signals': True,
+        'risk_analysis': True,
+        'portfolio_optimization': False
+    },
+    SubscriptionTier.PREMIUM: {
+        'sentiment_analysis': True,
+        'basic_signals': True,
+        'advanced_signals': True,
+        'risk_analysis': True,
+        'portfolio_optimization': True,
+        'custom_strategy': True
+    }
+}
+
+class User(DatabaseModel):
+    """User model with full type hints"""
+    __tablename__ = 'users'
+    
+    # Basic user information
+    username: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    email: Mapped[str] = mapped_column(String(100), unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(64))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    
+    # Trading related fields
+    risk_tolerance: Mapped[float] = mapped_column(Float, default=0.5)
+    active_symbol: Mapped[Optional[str]] = mapped_column(String(20))
+    
+    # Telegram integration
+    telegram_id: Mapped[Optional[int]] = mapped_column(BigInteger, unique=True)
+    telegram_username: Mapped[Optional[str]] = mapped_column(String(100))
+    
+    # Relationships
+    subscription: Mapped[Optional['Subscription']] = relationship(
+        'Subscription',
+        back_populates='user',
+        uselist=False,
+        lazy='joined'
+    )
+
+    @property
+    def is_premium(self) -> bool:
+        """Check if user has premium subscription"""
+        return bool(
+            self.subscription and 
+            self.subscription.tier == SubscriptionTier.PREMIUM and
+            self.subscription.is_active
+        )
+
+class Subscription(DatabaseModel):
+    """Subscription model with full type hints"""
+    __tablename__ = 'subscriptions'
+    
+    # Foreign key relationship
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    
+    # Subscription details
+    tier: Mapped[SubscriptionTier] = mapped_column(
+        Enum(SubscriptionTier),
+        default=SubscriptionTier.FREE
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    start_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc)
+    )
+    end_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    
+    # Usage tracking
+    signal_credits: Mapped[int] = mapped_column(Integer, default=0)
+    signal_changes_made: Mapped[int] = mapped_column(Integer, default=0)
+    last_signal_change: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    last_ai_request: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    ai_requests_count: Mapped[int] = mapped_column(Integer, default=0)
+    ai_consultation_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    
+    # Relationships
+    user: Mapped[User] = relationship(User, back_populates='subscription')
+
+    @property
+    def is_expired(self) -> bool:
+        """Check if subscription has expired"""
+        if not self.end_date:
+            return False
+        return datetime.now(timezone.utc) > self.end_date
+
+    @property
+    def features(self) -> FeatureSet:
+        """Get features for current tier"""
+        return TIER_FEATURES[self.tier]
+
+class UserOperations(DatabaseOperations[User]):
+    """User database operations implementation"""
+    
+    async def get_by_id(self, id: int) -> Optional[User]:
+        """Get user by ID"""
+        return await self.session.get(User, id)
+        
+    async def get_by_telegram_id(self, telegram_id: int) -> Optional[User]:
+        """Get user by Telegram ID with type-safe query"""
+        stmt = select(User).where(User.telegram_id == telegram_id)
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def create_telegram_user(self, telegram_id: int, username: Optional[str] = None) -> User:
+        """Create a new user from Telegram data"""
+        user = User(
+            telegram_id=telegram_id,
+            telegram_username=username,
+            username=username or f"tg_{telegram_id}",
+            is_active=True
+        )
+        self.session.add(user)
+        await self.session.commit()
+        await self.session.refresh(user)
+        return user"""Get user by ID"""
+        stmt = select(User).where(User.id == id)
+        result = await self.session.scalar(stmt)
+        return result
+
+    async def get_by_telegram_id(self, telegram_id: int) -> Optional[User]:
+        """Get user by telegram ID"""
+        stmt = select(User).where(User.telegram_id == telegram_id)
+        result = await self.session.scalar(stmt)
+        return result
+
+    async def get_by_email(self, email: str) -> Optional[User]:
+        """Get user by email"""
+        stmt = select(User).where(User.email == email)
+        result = await self.session.scalar(stmt)
+        return result
+
+    async def create(self, **data: Any) -> User:
+        """Create new user"""
+        user = User(**data)
+        self.session.add(user)
+        await self.session.flush()
+        return user
+
+    async def update(self, entity: User, **data: Any) -> User:
+        """Update user data"""
+        for key, value in data.items():
+            if hasattr(entity, key):
+                setattr(entity, key, value)
+        await self.session.flush()
+        return entity
+
+    async def delete(self, entity: User) -> None:
+        """Delete user"""
+        await self.session.delete(entity)
+        await self.session.flush()
+
+class SubscriptionOperations(DatabaseOperations[Subscription]):
+    """Subscription database operations implementation"""
+    
+    async def get_by_id(self, id: int) -> Optional[Subscription]:
+        """Get subscription by ID"""
+        stmt = select(Subscription).where(Subscription.id == id)
+        result = await self.session.scalar(stmt)
+        return result
+
+    async def get_by_user_id(self, user_id: int) -> Optional[Subscription]:
+        """Get subscription by user ID"""
+        stmt = select(Subscription).where(Subscription.user_id == user_id)
+        result = await self.session.scalar(stmt)
+        return result
+
+    async def create(self, **data: Any) -> Subscription:
+        """Create new subscription"""
+        subscription = Subscription(**data)
+        self.session.add(subscription)
+        await self.session.flush()
+        return subscription
+
+    async def update(self, entity: Subscription, **data: Any) -> Subscription:
+        """Update subscription data"""
+        for key, value in data.items():
+            if hasattr(entity, key):
+                setattr(entity, key, value)
+        await self.session.flush()
+        return entity
+
+    async def delete(self, entity: Subscription) -> None:
+        """Delete subscription"""
+        await self.session.delete(entity)
+        await self.session.flush()
