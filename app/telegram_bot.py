@@ -1,7 +1,14 @@
 import sys
 import os
+import logging
+import re
+from typing import Dict, Any, Optional, cast
+from contextlib import asynccontextmanager
+
+# Add project root to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -9,26 +16,19 @@ from telegram.ext import (
     filters,
     CallbackQueryHandler,
     ContextTypes,
+    CallbackContext
 )
-from telegram import Update
-from typing import Dict, Any, Optional
-from contextlib import asynccontextmanager
-
-class ExtendedContext(ContextTypes.DEFAULT_TYPE):
-    """Extended context type with proper user_data typing"""
-    @property
-    def user_data(self) -> Optional[Dict[str, Any]]:
-        return self.user_data_
-import logging
+from telegram.ext.filters import UpdateFilter
 from dotenv import load_dotenv
+
+# Local imports
 from app.handlers.subscribe_command import subscribe_command, subscribe_callback_handler
 from app.handlers.change_symbol import change_symbol_command
 from app.signals.engine import generate_daily_signals
-from app.models.user import User, UserOperations
-from app.database import AsyncSession, get_session
-from app.auth import authenticate
+from app.models.user import UserOperations
+from app.database import get_async_session
+from app.auth.handlers import AuthHandler
 from app.payments import process_payment_code
-import re
 
 # Load environment variables
 load_dotenv()
@@ -41,38 +41,59 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+if not TOKEN:
+    raise ValueError("TELEGRAM_BOT_TOKEN environment variable not set")
 
-# --- User Authentication Integration ---
-# When a user interacts with the bot, we link their Telegram user_id to a user account in our DB.
-# If the user does not exist, we create a new user with their Telegram profile.
-# This enables seamless linking between Telegram and web dashboard.
+# Custom context type with proper typing
+class ExtendedContext(ContextTypes.DEFAULT_TYPE):
+    """Extended context type with proper user_data typing"""
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._user_data: Dict[str, Any] = {}
+    
+    @property
+    def user_data(self) -> Dict[str, Any]:
+        return self._user_data
+    
+    @user_data.setter
+    def user_data(self, value: Dict[str, Any]) -> None:
+        self._user_data = value or {}
 
-async def start(update: Update, context: ExtendedContext) -> None:
-    if update.message:
-        telegram_id = update.effective_user.id
-        async with get_session() as session:
-            user_ops = UserOperations(session)
-            
-            # Check if user exists
-            user = await user_ops.get_by_telegram_id(telegram_id)
-            if user:
-                await update.message.reply_text(
-                    "Welcome back! You can use /help to see available commands."
-                )
-            else:
-                # Start registration process
-                context.user_data['registration_step'] = 'email'
-                await update.message.reply_text(
-                    "Welcome to Alpha Pro Trader! Let's set up your account.\n"
-                    "Please enter your email address:"
-                )
+# --- Command Handlers ---
 
-async def handle_registration(update: Update, context: CallbackContext) -> None:
-    if not update.message or not update.message.text:
+async def start(update: Update, context: CallbackContext[object, dict, Any, Any]) -> None:
+    """Handle the /start command"""
+    if not update.message or not update.effective_user:
+        return
+        
+    telegram_id = update.effective_user.id
+    async with get_async_session() as session:
+        user_ops = UserOperations(session)
+        
+        # Check if user exists
+        user = await user_ops.get_by_telegram_id(telegram_id)
+        if user:
+            await update.message.reply_text(
+                "Welcome back! You can use /help to see available commands."
+            )
+        else:
+            # Start registration process
+            if not isinstance(context, ExtendedContext):
+                context = cast(ExtendedContext, context)
+            context.user_data['registration_step'] = 'email'
+            await update.message.reply_text(
+                "Welcome to Alpha Pro Trader! Let's set up your account.\n"
+                "Please enter your email address:"
+            )
+
+async def handle_registration(update: Update, context: CallbackContext[object, dict, Any, Any]) -> None:
+    """Handle user registration steps"""
+    if not update.message or not update.message.text or not update.effective_user:
         return
 
-    session = get_session()
-    auth_handler = AuthHandler(session)
+    if not isinstance(context, ExtendedContext):
+        context = cast(ExtendedContext, context)
+        
     step = context.user_data.get('registration_step')
     text = update.message.text.strip()
 
@@ -99,138 +120,177 @@ async def handle_registration(update: Update, context: CallbackContext) -> None:
             'telegram_id': update.effective_user.id
         }
         
-        result = await auth_handler.register_user(auth_data)
-        if result.success:
-            await update.message.reply_text(
-                "Registration successful! Your Telegram account is now linked.\n"
-                "Use /help to see available commands."
-            )
-        else:
-            await update.message.reply_text(
-                f"Registration failed: {result.message}\n"
-                "Please try again with /start"
-            )
-        
-        # Clear registration data
-        context.user_data.clear()
-
-async def help_command(update: Update, context: CallbackContext) -> None:
-    if update.message:
-        await update.message.reply_text(
-            "/start - Welcome message\n"
-            "/help - Show this help message\n"
-            "/subscribe - Start subscription/payment\n"
-            "/status - Show your subscription status\n"
-            "/signals - Get the latest trading signals\n"
-            "/change_symbol - Change or add a trading symbol\n"
-            "/support - Get support/contact info\n"
-            "/terms - Show terms and disclaimer"
-        )
-
-# --- Payment Code Handler (Mpesa, Bank, etc.) ---
-async def message_handler(update: Update, context: CallbackContext) -> None:
-    if update.message and update.message.text:
-        text = update.message.text.strip()
-        # Detect payment code (e.g., Mpesa)
-        if re.match(r"^[A-Z0-9]{10,}$", text):
-            user_id = update.effective_user.id
-            user = get_user_by_telegram_id(user_id)
-            result = process_payment_code(user, text)
-            if result["success"]:
-                await update.message.reply_text("Payment received! Your subscription is now active.")
+        async with get_async_session() as session:
+            auth_handler = AuthHandler(session)
+            result = await auth_handler.register_user(auth_data)
+            
+            if result.success:
+                context.user_data.clear()
+                await update.message.reply_text(
+                    "Registration successful! You can now use all bot features.\n"
+                    "Use /help to see available commands."
+                )
             else:
-                await update.message.reply_text("Payment code invalid or already used. Please check and try again.")
-        else:
-            await update.message.reply_text(f"You said: {text}")
+                await update.message.reply_text(
+                    f"Registration failed: {result.message}\n"
+                    "Please try again with /start"
+                )
 
-async def error_handler(update: object, context: CallbackContext) -> None:
-    logger.error("Exception while handling an update:", exc_info=context.error)
-    if isinstance(update, Update) and update.message:
-        await update.message.reply_text('An error occurred. Please try again.')
+async def help_command(update: Update, context: CallbackContext[object, dict, Any, Any]) -> None:
+    """Handle the /help command"""
+    help_text = """
+Available commands:
+/start - Start the bot
+/help - Show this help message
+/subscribe - Subscribe to signals
+/status - Check your subscription status
+/signals - Get latest trading signals
+/support - Contact support
+/terms - View terms of service
+    """
+    if update.message:
+        await update.message.reply_text(help_text.strip())
+
+# --- Payment Code Handler ---
+
+async def message_handler(update: Update, context: CallbackContext[object, dict, Any, Any]) -> None:
+    """Handle incoming messages for payment codes"""
+    if not update.message or not update.message.text or not update.effective_user:
+        return
+        
+    text = update.message.text.strip()
+    if len(text) < 5:  # Basic validation for payment codes
+        return
+        
+    async with get_async_session() as session:
+        user_ops = UserOperations(session)
+        user = await user_ops.get_by_telegram_id(update.effective_user.id)
+        if not user:
+            await update.message.reply_text("Please register first with /start")
+            return
+            
+        result = await process_payment_code(user, text)
+        await update.message.reply_text(result.get('message', 'Payment processed'))
+
+# --- Error Handler ---
+
+async def error_handler(update: object, context: CallbackContext[object, dict, Any, Any]) -> None:
+    """Log errors and handle them gracefully"""
+    logger.error("Error while processing update:", exc_info=context.error)
+    if update and isinstance(update, Update) and update.message:
+        await update.message.reply_text("An error occurred. Please try again later.")
 
 # --- Subscription Command ---
-async def subscribe(update: Update, context: CallbackContext) -> None:
+
+async def subscribe(update: Update, context: CallbackContext[object, dict, Any, Any]) -> None:
+    """Handle subscription command"""
     await subscribe_command(update, context)
 
 # --- Status Command ---
-async def status(update: Update, context: CallbackContext) -> None:
-    if update.message:
-        user_id = update.effective_user.id
-        user = get_user_by_telegram_id(user_id)
+
+async def status(update: Update, context: CallbackContext[object, dict, Any, Any]) -> None:
+    """Handle status command"""
+    if not update.effective_user:
+        return
+        
+    async with get_async_session() as session:
+        user_ops = UserOperations(session)
+        user = await user_ops.get_by_telegram_id(update.effective_user.id)
+        
         if not user:
-            await update.message.reply_text("No account found. Please /subscribe to start.")
+            await update.message.reply_text("Please register first with /start")
             return
-        status = "active" if user.is_active() else "inactive"
-        expiry = user.subscription_expiry.strftime("%Y-%m-%d") if user.subscription_expiry else "N/A"
+            
+        status_text = "Active" if user.is_active else "Inactive"
+        expiry = user.subscription_expiry.strftime("%Y-%m-%d %H:%M:%S") if user.subscription_expiry else "N/A"
+        
         await update.message.reply_text(
-            f"Your subscription status: {status}.\nExpiry: {expiry}"
+            f"Subscription Status: {status_text}\n"
+            f"Expiry Date: {expiry}"
         )
 
 # --- Signals Command ---
-async def signals(update: Update, context: CallbackContext) -> None:
-    if update.message:
-        user_id = update.effective_user.id
-        user = get_user_by_telegram_id(user_id)
-        if not user or not user.is_active():
-            await update.message.reply_text("You need an active subscription to receive signals.")
+
+async def signals(update: Update, context: CallbackContext[object, dict, Any, Any]) -> None:
+    """Handle signals command"""
+    if not update.effective_user:
+        return
+        
+    async with get_async_session() as session:
+        user_ops = UserOperations(session)
+        user = await user_ops.get_by_telegram_id(update.effective_user.id)
+        
+        if not user or not user.is_active:
+            await update.message.reply_text(
+                "You need an active subscription to receive signals.\n"
+                "Use /subscribe to get started."
+            )
             return
-        signals = generate_daily_signals(user)
-        if not signals:
-            await update.message.reply_text("No new signals at the moment. Please check back later.")
+            
+        signals = await generate_daily_signals()
+        if signals:
+            response = "\n".join(
+                f"{s['symbol']}: {s['signal']} - {s['confidence']}%"
+                for s in signals
+            )
         else:
-            for sig in signals:
-                msg = (
-                    f"Symbol: {sig['symbol']}\n"
-                    f"Timeframe: {sig['timeframe']}\n"
-                    f"Action: {sig['action'].upper()}\n"
-                    f"Entry: {sig['entry']:.5f}\n"
-                    f"TP: {', '.join([f'{tp:.5f}' for tp in sig['tp']])}\n"
-                    f"SL: {sig['sl']:.5f}\n"
-                    f"Confidence: {sig['confidence']}%\n"
-                    f"Indicators: {sig['indicators']}\n"
-                    f"Position Size: {sig.get('position_size', 0):.4f}"
-                )
-                await update.message.reply_text(msg)
+            response = "No signals available at the moment."
+            
+        await update.message.reply_text(f"Latest Signals:\n{response}")
 
 # --- Change Symbol Command ---
-async def change_symbol(update: Update, context: CallbackContext) -> None:
+
+async def change_symbol(update: Update, context: CallbackContext[object, dict, Any, Any]) -> None:
+    """Handle symbol change command"""
     await change_symbol_command(update, context)
 
-async def support(update: Update, context: CallbackContext) -> None:
+# --- Support Command ---
+
+async def support(update: Update, context: CallbackContext[object, dict, Any, Any]) -> None:
+    """Handle support command"""
     if update.message:
         await update.message.reply_text(
-            "For support, contact @YourSupportUsername or email support@example.com"
+            "For support, please contact us at support@tradingbot.com\n"
+            "We typically respond within 24 hours."
         )
 
-async def terms(update: Update, context: CallbackContext) -> None:
+# --- Terms Command ---
+
+async def terms(update: Update, context: CallbackContext[object, dict, Any, Any]) -> None:
+    """Handle terms command"""
     if update.message:
         await update.message.reply_text(
-            "Disclaimer: This is not financial advice. Use at your own discretion. See full terms at [your link]."
+            "Terms of Service:\n"
+            "1. This is a demo trading bot.\n"
+            "2. Use at your own risk.\n"
+            "3. No financial advice is provided."
         )
 
 def main() -> None:
-    if not TOKEN:
-        logger.error("No token provided. Please set TELEGRAM_BOT_TOKEN environment variable.")
-        return
+    """Start the bot"""
+    # Create the Application and pass it your bot's token.
+    application = ApplicationBuilder()\
+        .token(TOKEN)\
+        .context_types(ContextTypes(context=ExtendedContext))\
+        .build()
 
-    application = ApplicationBuilder().token(TOKEN).build()
-
-    # --- Command Handlers ---
+    # Add command handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("subscribe", subscribe))
-    application.add_handler(CallbackQueryHandler(subscribe_callback_handler, pattern="^pay_"))
     application.add_handler(CommandHandler("status", status))
     application.add_handler(CommandHandler("signals", signals))
-    application.add_handler(CommandHandler("change_symbol", change_symbol))
     application.add_handler(CommandHandler("support", support))
     application.add_handler(CommandHandler("terms", terms))
+    
+    # Add message handler for payment codes
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
+    
+    # Add error handler
     application.add_error_handler(error_handler)
 
-    logger.info("Starting bot...")
+    # Start the Bot
     application.run_polling()
 
 if __name__ == "__main__":
     main()
-

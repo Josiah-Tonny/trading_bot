@@ -1,23 +1,16 @@
 """Authentication handlers for both web and Telegram interfaces."""
 from datetime import datetime, timezone
-from typing import cast, Optional, TypedDict, Dict, Any, Tuple
-from fastapi import Depends, HTTPException, Request
+from typing import Optional, TypedDict, Tuple
+
+from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.sql.expression import Select
 import pyotp
 
 from app.models.models import User
 from app.auth.security import SecurityService, SecurityProtocol, AuthResponse
 from app.database import get_session
 
-class AuthData(TypedDict, total=False):
-    """Authentication input data"""
-    username: Optional[str]
-    email: Optional[str]
-    password: str
-    telegram_id: Optional[int]
-    otp_code: Optional[str]
 
 class AuthData(TypedDict, total=False):
     """Authentication input data"""
@@ -26,6 +19,7 @@ class AuthData(TypedDict, total=False):
     password: str
     telegram_id: Optional[int]
     otp_code: Optional[str]
+
 
 class AuthHandler:
     """Handler for user authentication operations"""
@@ -61,19 +55,19 @@ class AuthHandler:
 
         if user.is_locked:
             if user.locked_until and user.locked_until > datetime.now(timezone.utc):
-                return {
-                    "success": False, 
-                    "message": f"Account locked until {user.locked_until}",
-                    "user_id": None,
-                    "token": None
-                }
+                return AuthResponse(
+                    success=False, 
+                    message=f"Account locked until {user.locked_until}",
+                    user_id=None,
+                    token=None
+                )
             # Reset lock if time has expired
             user.is_locked = False
             user.locked_until = None
             await self.session.commit()
 
         # Verify password
-        if not await self.security.verify_password(auth_data['password'], user.password_hash):
+        if 'password' not in auth_data or not await self.security.verify_password(auth_data['password'], user.password_hash):
             await self.security.track_login_attempt(user.id, ip_address, False)
             return AuthResponse(
                 success=False,
@@ -83,8 +77,8 @@ class AuthHandler:
             )
 
         # Verify OTP if enabled
-        if user.two_factor_enabled and auth_data.get('otp_code'):
-            if not await self.security.verify_otp(user.otp_secret, auth_data['otp_code']):
+        if user.two_factor_enabled and 'otp_code' in auth_data and auth_data['otp_code']:
+            if not user.otp_secret or not await self.security.verify_otp(user.otp_secret, auth_data['otp_code']):
                 await self.security.track_login_attempt(user.id, ip_address, False)
                 return AuthResponse(
                     success=False,
@@ -97,29 +91,31 @@ class AuthHandler:
         token = await self.security.generate_token(user.id)
         await self.security.track_login_attempt(user.id, ip_address, True)
 
-        return {
-            "success": True,
-            "message": "Authentication successful",
-            "user_id": user.id,
-            "token": token
-        }
+        return AuthResponse(
+            success=True,
+            message="Authentication successful",
+            user_id=user.id,
+            token=token
+        )
 
     async def _get_user(self, auth_data: AuthData) -> Optional[User]:
         """Find user by any provided identifier"""
         # Construct query based on provided credentials
         query = select(User)
-        if email := auth_data.get('email'):
-            query = query.where(User.email == email)
-        elif username := auth_data.get('username'):
-            query = query.where(User.username == username)
-        elif telegram_id := auth_data.get('telegram_id'):
-            query = query.where(User.telegram_id == telegram_id)
-        else:
+        conditions = []
+        
+        if 'email' in auth_data and auth_data['email']:
+            conditions.append(User.email == auth_data['email'])
+        if 'username' in auth_data and auth_data['username']:
+            conditions.append(User.username == auth_data['username'])
+        if 'telegram_id' in auth_data and auth_data['telegram_id'] is not None:
+            conditions.append(User.telegram_id == auth_data['telegram_id'])
+            
+        if not conditions:
             return None
-
+            
+        query = query.where(*conditions)
         result = await self.session.execute(query)
-        return result.scalar_one_or_none()
-        result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
     async def register_user(self, auth_data: AuthData) -> AuthResponse:
@@ -127,14 +123,22 @@ class AuthHandler:
         # Check if user exists
         existing_user = await self._get_user(auth_data)
         if existing_user:
-            return {
-                "success": False,
-                "message": "User already exists",
-                "user_id": None,
-                "token": None
-            }
+            return AuthResponse(
+                success=False,
+                message="User already exists",
+                user_id=None,
+                token=None
+            )
 
         # Create new user
+        if 'password' not in auth_data:
+            return AuthResponse(
+                success=False,
+                message="Password is required",
+                user_id=None,
+                token=None
+            )
+            
         password_hash = await self.security.hash_password(auth_data['password'])
         new_user = User(
             username=auth_data.get('username'),
@@ -148,13 +152,13 @@ class AuthHandler:
         await self.session.commit()
 
         # Generate JWT token
-        token = await self._security_service.generate_token(new_user.id)
-        return {
-            "success": True,
-            "message": "Registration successful",
-            "user_id": new_user.id,
-            "token": token
-        }
+        token = await self.security.generate_token(new_user.id)
+        return AuthResponse(
+            success=True,
+            message="Registration successful",
+            user_id=new_user.id,
+            token=token
+        )
 
     async def setup_2fa(self, user_id: int) -> Tuple[str, str]:
         """Set up 2FA for a user"""
@@ -162,7 +166,7 @@ class AuthHandler:
         if not user:
             raise ValueError("User not found")
 
-        secret = await self._security_service.generate_otp_secret()
+        secret = await self.security.generate_otp_secret()
         user.otp_secret = secret
         user.two_factor_enabled = True
         await self.session.commit()
@@ -175,6 +179,7 @@ class AuthHandler:
 
         return secret, provisioning_uri
 
+
 async def get_current_user(
     request: Request,
     session: AsyncSession = Depends(get_session)
@@ -182,17 +187,28 @@ async def get_current_user(
     """FastAPI dependency for getting current authenticated user"""
     auth_header = str(request.headers.get('Authorization', ''))
     if not auth_header or not auth_header.startswith('Bearer '):
-        raise HTTPException(status_code=401, detail="Not authenticated")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     token = auth_header.split(' ')[1]
     security = SecurityService(session)
     user_id = await security.verify_token(token)
 
     if not user_id:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     user = await session.get(User, user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
 
     return user

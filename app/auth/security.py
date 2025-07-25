@@ -1,6 +1,6 @@
 """Security utilities for authentication and user protection."""
 import os
-from typing import Optional, Union, Dict, TypedDict, Protocol, cast
+from typing import Optional, Union, Dict, Protocol
 from datetime import datetime, timedelta, timezone
 import bcrypt
 import jwt
@@ -11,8 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 import logging
 from dataclasses import dataclass
 
-from app.models.models import Base
-from app.models.models import User
+from app.models.models import Base, User
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +32,11 @@ class AuthResponse:
     user_id: Optional[int] = None
     token: Optional[str] = None
 
+class NotificationService(Protocol):
+    """Protocol for notification service"""
+    async def send_email(self, to: str, subject: str, body: str) -> None: ...
+    async def send_telegram_message(self, user_id: int, message: str) -> None: ...
+
 class SecurityProtocol(Protocol):
     """Protocol for security operations"""
     async def verify_password(self, password: str, password_hash: str) -> bool: ...
@@ -50,6 +54,18 @@ class SecurityService:
         self._max_attempts: int = 5
         self._lockout_duration: timedelta = timedelta(minutes=30)
         self._jwt_secret: str = os.getenv('JWT_SECRET_KEY', 'your-secret-key')
+        self._notification_service: Optional[NotificationService] = None
+
+    async def _get_notification_service(self) -> Optional[NotificationService]:
+        """Lazily load the notification service"""
+        if self._notification_service is None:
+            try:
+                from app.notifications import get_notification_service
+                self._notification_service = await get_notification_service(self.session)
+            except ImportError:
+                logger.warning("Notification service not available")
+                return None
+        return self._notification_service
 
     async def verify_password(self, password: str, password_hash: str) -> bool:
         return bcrypt.checkpw(password.encode(), password_hash.encode())
@@ -90,7 +106,7 @@ class SecurityService:
         self.session.add(attempt)
         await self.session.commit()
 
-        if user_id and not success:
+        if user_id is not None and not success:
             # Check for multiple failed attempts
             stmt = select(LoginAttempt).where(
                 LoginAttempt.user_id == user_id,
@@ -108,13 +124,10 @@ class SecurityService:
                 )
                 await self.session.execute(stmt)
                 await self.session.commit()
-                await self._notify_user_of_lockout(user_id)
+                await self._notify_user_of_lockout(user_id, ip_address)
 
     async def _notify_user_of_lockout(self, user_id: int, ip_address: str) -> None:
         """Notify user of account lockout via email and Telegram"""
-        from app.notifications import get_notification_service
-        from app.models.models import User
-
         stmt = select(User).where(User.id == user_id)
         result = await self.session.execute(stmt)
         user = result.scalar_one_or_none()
@@ -122,7 +135,11 @@ class SecurityService:
         if not user:
             return
 
-        notification_service = await get_notification_service(self.session)
+        notification_service = await self._get_notification_service()
+        if not notification_service:
+            logger.warning("Cannot send lockout notification: notification service not available")
+            return
+
         message = f"""
         🚨 Security Alert: Multiple failed login attempts detected on your Alpha Pro Trader account.
         Your account has been temporarily locked for {self._lockout_duration.seconds // 60} minutes.
@@ -133,18 +150,25 @@ class SecurityService:
         3. Contact support if you need assistance
         
         Time of incident: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}
+        IP Address: {ip_address}
         """
 
         # Send notifications
         if user.email:
-            await notification_service.send_email(
-                to=user.email,
-                subject="Security Alert - Account Locked",
-                body=message
-            )
+            try:
+                await notification_service.send_email(
+                    to=user.email,
+                    subject="Security Alert - Account Locked",
+                    body=message
+                )
+            except Exception as e:
+                logger.error(f"Failed to send email notification: {e}")
         
-        if user.telegram_user_id:
-            await notification_service.send_telegram_message(
-                user_id=user.telegram_user_id,
-                message=message
-            )
+        if hasattr(user, 'telegram_user_id') and user.telegram_user_id:
+            try:
+                await notification_service.send_telegram_message(
+                    user_id=user.telegram_user_id,
+                    message=message
+                )
+            except Exception as e:
+                logger.error(f"Failed to send Telegram notification: {e}")

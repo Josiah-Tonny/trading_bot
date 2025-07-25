@@ -2,10 +2,8 @@ from typing import Optional, Dict, Any, TypedDict, Final, Union, List
 from datetime import datetime, timezone
 import enum
 from decimal import Decimal
-from dataclasses import dataclass
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Integer, Boolean, DateTime, Float, ForeignKey, Enum, BigInteger
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import select
 
 from app.models.base import DatabaseModel, DatabaseOperations
@@ -161,7 +159,7 @@ class Subscription(DatabaseModel):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     start_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc)
+        default=lambda: datetime.now(timezone.utc) 
     )
     end_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     
@@ -193,32 +191,12 @@ class UserOperations(DatabaseOperations[User]):
     
     async def get_by_id(self, id: int) -> Optional[User]:
         """Get user by ID"""
-        return await self.session.get(User, id)
-        
-    async def get_by_telegram_id(self, telegram_id: int) -> Optional[User]:
-        """Get user by Telegram ID with type-safe query"""
-        stmt = select(User).where(User.telegram_id == telegram_id)
-        result = await self.session.execute(stmt)
-        return result.scalar_one_or_none()
-
-    async def create_telegram_user(self, telegram_id: int, username: Optional[str] = None) -> User:
-        """Create a new user from Telegram data"""
-        user = User(
-            telegram_id=telegram_id,
-            telegram_username=username,
-            username=username or f"tg_{telegram_id}",
-            is_active=True
-        )
-        self.session.add(user)
-        await self.session.commit()
-        await self.session.refresh(user)
-        return user"""Get user by ID"""
         stmt = select(User).where(User.id == id)
         result = await self.session.scalar(stmt)
         return result
-
+        
     async def get_by_telegram_id(self, telegram_id: int) -> Optional[User]:
-        """Get user by telegram ID"""
+        """Get user by Telegram ID with type-safe query"""
         stmt = select(User).where(User.telegram_id == telegram_id)
         result = await self.session.scalar(stmt)
         return result
@@ -228,6 +206,21 @@ class UserOperations(DatabaseOperations[User]):
         stmt = select(User).where(User.email == email)
         result = await self.session.scalar(stmt)
         return result
+
+    async def create_telegram_user(self, telegram_id: int, username: Optional[str] = None) -> User:
+        """Create a new user from Telegram data"""
+        user = User(
+            telegram_id=telegram_id,
+            telegram_username=username,
+            username=username or f"tg_{telegram_id}",
+            email=f"{telegram_id}@telegram.user",
+            password_hash="",  # Will be set later
+            is_active=True
+        )
+        self.session.add(user)
+        await self.session.commit()
+        await self.session.refresh(user)
+        return user
 
     async def create(self, **data: Any) -> User:
         """Create new user"""
@@ -254,23 +247,21 @@ class SubscriptionOperations(DatabaseOperations[Subscription]):
     
     async def get_by_id(self, id: int) -> Optional[Subscription]:
         """Get subscription by ID"""
-        stmt = select(Subscription).where(Subscription.id == id)
-        result = await self.session.scalar(stmt)
-        return result
-
+        return await self.session.get(Subscription, id)
+    
     async def get_by_user_id(self, user_id: int) -> Optional[Subscription]:
         """Get subscription by user ID"""
         stmt = select(Subscription).where(Subscription.user_id == user_id)
         result = await self.session.scalar(stmt)
         return result
-
+    
     async def create(self, **data: Any) -> Subscription:
         """Create new subscription"""
         subscription = Subscription(**data)
         self.session.add(subscription)
         await self.session.flush()
         return subscription
-
+    
     async def update(self, entity: Subscription, **data: Any) -> Subscription:
         """Update subscription data"""
         for key, value in data.items():
@@ -278,7 +269,7 @@ class SubscriptionOperations(DatabaseOperations[Subscription]):
                 setattr(entity, key, value)
         await self.session.flush()
         return entity
-
+    
     async def delete(self, entity: Subscription) -> None:
         """Delete subscription"""
         await self.session.delete(entity)
