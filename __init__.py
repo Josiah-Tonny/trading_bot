@@ -5,10 +5,15 @@ from flask import Flask
 def create_app(test_config=None):
     """Create and configure the Flask application."""
     app = Flask(__name__, instance_relative_config=True)
+    
+    # Default configuration
     app.config.from_mapping(
         SECRET_KEY=os.getenv('SECRET_KEY', 'dev'),
         DEBUG=os.getenv('DEBUG', 'False') == 'True',
         TELEGRAM_BOT_TOKEN=os.getenv('TELEGRAM_BOT_TOKEN'),
+        # Database configuration
+        SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URL', 'sqlite:///' + os.path.join(app.instance_path, 'trading_bot.db')),
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
         # Session configuration
         SESSION_COOKIE_SECURE=False,
         SESSION_COOKIE_HTTPONLY=True,
@@ -31,12 +36,21 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    # Register blueprints
-    from web import app as web_app
-    app.register_blueprint(web_app.bp)
+    # Initialize extensions
+    from .app.extensions import db, login_manager, migrate
+    db.init_app(app)
+    login_manager.init_app(app)
+    migrate.init_app(app, db)
 
-    # Initialize database
-    from app.models.models import create_tables
-    create_tables()
+    # Register blueprints
+    from .web.app import bp as web_bp
+    app.register_blueprint(web_bp, url_prefix='/')
+
+    # Import models for SQLAlchemy
+    from .app import models  # This ensures models are registered with SQLAlchemy
+    
+    # Create database tables
+    with app.app_context():
+        db.create_all()
 
     return app

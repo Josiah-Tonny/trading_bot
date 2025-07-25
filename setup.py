@@ -5,7 +5,13 @@ setup(
     name="trading_bot",
     version="0.1",
     packages=find_packages(),
+    include_package_data=True,
     install_requires=[
-        # List your dependencies here
+        'Flask',
+        'Flask-SQLAlchemy',
+        'Flask-Login',
+        'Flask-Migrate',
+        'python-dotenv',
     ],
+    python_requires='>=3.8',
 )

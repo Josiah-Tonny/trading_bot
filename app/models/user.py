@@ -5,6 +5,8 @@ from decimal import Decimal
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Integer, Boolean, DateTime, Float, ForeignKey, Enum, BigInteger
 from sqlalchemy.sql import select
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from app.models.base import DatabaseModel, DatabaseOperations
 
@@ -109,7 +111,7 @@ TIER_FEATURES: Dict[SubscriptionTier, FeatureSet] = {
     }
 }
 
-class User(DatabaseModel):
+class User(DatabaseModel, UserMixin):
     """User model with full type hints"""
     __tablename__ = 'users'
     
@@ -134,6 +136,20 @@ class User(DatabaseModel):
         uselist=False,
         lazy='joined'
     )
+
+    @property
+    def password(self):
+        raise AttributeError('password is not a readable attribute')
+
+    @password.setter
+    def password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def verify_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def get_id(self):
+        return str(self.id)
 
     @property
     def is_premium(self) -> bool:

@@ -131,6 +131,10 @@ def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = SECRET_KEY
     
+    # Configure database
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///' + os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'instance', 'trading_bot.db'))
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
     # Register blueprints
     app.register_blueprint(bp)
     
@@ -141,40 +145,17 @@ def create_app():
     app.config['TEMPLATES_AUTO_RELOAD'] = True
     
     # Initialize extensions
-    from app.extensions import db
+    from app.extensions import db, login_manager
     db.init_app(app)
+    login_manager.init_app(app)
     
     # Register error handlers
     app.register_error_handler(404, not_found_error)
     app.register_error_handler(500, internal_error)
     
-    # Add context processor
-    app.context_processor(inject_user)
-    
-    # Database initialization
-    try:
-        from app.models.models import create_tables
-        print("Initializing database...")
-        create_tables()
-        
-        try:
-            from app.models.user import UserService
-            with UserService() as service:
-                existing_user = service.get_user_by_email("test@example.com")
-                if not existing_user:
-                    user = service.create_user(
-                        email="test@example.com",
-                        password="password123"
-                    )
-                    print(f"✅ Created sample user: {user.email}")
-                    print("   Login with: test@example.com / password123")
-                else:
-                    print("✅ Sample user already exists")
-        except Exception as e:
-            print(f"Note: Could not create sample user: {e}")
-            
-    except Exception as e:
-        print(f"Warning: Database initialization failed: {e}")
+    # Create database tables
+    with app.app_context():
+        db.create_all()
     
     return app
 
