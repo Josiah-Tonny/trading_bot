@@ -21,6 +21,7 @@ sys.path.insert(0, project_root)
 # Initialize Flask app FIRST
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
+app.config['DEBUG'] = os.getenv('DEBUG', 'False') == 'True'
 app.config['TELEGRAM_BOT_TOKEN'] = os.getenv('TELEGRAM_BOT_TOKEN')
 
 # Explicit session configuration to fix cookie issues
@@ -208,7 +209,7 @@ def perform_password_reset(token, new_password):
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password_route():
     if request.method == 'POST':
-        email = request.form.get('email')
+        email = request.form.get('email') 
         token = forgot_password(email)
         if token:
             flash(f"Password reset link sent to {email}. (Token: {token})", "info")
@@ -250,6 +251,35 @@ def logout():
     session.clear()
     return redirect(url_for('index'))
 
+@app.route('/profile')
+def profile():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    if 'user_id' not in session:
+        flash('User ID not found in session', 'danger')
+        return redirect(url_for('login'))
+    user_id = session['user_id']
+    from app.models.user import UserService
+    user_service = UserService()
+    user = user_service.get_user_by_id(user_id)
+    if not user:
+        flash('User not found', 'danger')
+        return redirect(url_for('login'))
+    if request.method == 'POST':
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
+        phone_number = request.form.get('phone_number')
+        username = request.form.get('username')
+        
+        try:
+            user_service.update_user(user_id, first_name=first_name, last_name=last_name,
+                                     phone_number=phone_number, username=username)
+            flash('Profile updated successfully', 'success')
+        except ValueError as e:
+            flash(str(e), 'danger')
+        
+    return render_template('profile.html', user=user)
+
 @app.route('/signals')
 @login_required
 def signals():
@@ -258,7 +288,17 @@ def signals():
 @app.route('/portfolio')
 @login_required
 def portfolio():
-    return render_template('portfolio.html')
+    wining_position=0
+    losing_position=0
+    open_positions = 12  # Example value, replace with actual logic
+    
+    context={
+        
+        'wining_position':wining_position,
+        'losing_position':losing_position,
+        'open_positions':open_positions
+    }
+    return render_template('portfolio.html', context=context)
 
 @app.route('/trade')
 @login_required
@@ -276,6 +316,24 @@ def terms():
 @app.route('/privacy')
 def privacy():
     return render_template('privacy.html')
+
+@app.route('/watchlist')
+@login_required
+def watchlist():
+    return render_template('watchlist.html')
+
+@app.route('/analysis')
+@login_required
+def analysis():
+    return render_template('analysis.html')
+
+@app.route('/demo')
+def demo():
+    return render_template('demo.html')
+
+
+
+
 
 # API endpoints
 @app.route('/webhook/stripe', methods=['POST'])

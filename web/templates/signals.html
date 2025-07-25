@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Trading Signals - TradePro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .signals {
+        padding: 3rem 0;
+        min-height: calc(100vh - 100px);
+    }
+
+    .signals-header {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 3rem;
+        margin-bottom: 3rem;
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border-gray);
+    }
+
+    .dark .signals-header {
+        background: rgba(30, 41, 59, 0.9);
+        border-color: var(--dark-border);
+    }
+
+    .header-title h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 0.75rem;
+        color: var(--charcoal);
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .dark .header-title h1 {
+        background: var(--dark-accent);
+    }
+
+    .header-subtitle {
+        color: var(--text-muted);
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .dark .header-subtitle {
+        color: var(--dark-muted);
+    }
+
+    .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1.5rem;
+        background: var(--success-green);
+        color: var(--white);
+        border-radius: 24px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .pulse-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: currentColor;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .signals-controls {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 3rem;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px);
+        padding: 2rem;
+        border-radius: 20px;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border-gray);
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .dark .signals-controls {
+        background: rgba(30, 41, 59, 0.9);
+        border-color: var(--dark-border);
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .filter-label {
+        font-weight: 600;
+        color: var(--charcoal);
+        font-size: 1.1rem;
+    }
+
+    .dark .filter-label {
+        color: var(--dark-text);
+    }
+
+    .filter-select {
+        padding: 1rem 1.5rem;
+        border: 2px solid var(--border-gray);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.8);
+        color: var(--charcoal);
+        font-size: 1.1rem;
+        min-width: 150px;
+        transition: all var(--transition-normal);
+    }
+
+    .dark .filter-select {
+        background: rgba(30, 41, 59, 0.8);
+        border-color: var(--dark-border);
+        color: var(--dark-text);
+    }
+
+    .signal-strength-filter {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .strength-btn {
+        padding: 1rem 1.5rem;
+        border: 2px solid var(--border-gray);
+        border-radius: 12px;
+        background: transparent;
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all var(--transition-normal);
+    }
+
+    .dark .strength-btn {
+        background: transparent;
+        border-color: var(--dark-border);
+        color: var(--dark-muted);
+    }
+
+    .strength-btn.active {
+        background: var(--secondary-blue);
+        color: var(--white);
+        border-color: var(--secondary-blue);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .dark .strength-btn.active {
+        background: var(--dark-accent);
+        border-color: var(--dark-accent);
+    }
+
+    .signals-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 3rem;
+    }
+
+    .signal-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border-gray);
+        transition: all var(--transition-normal);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dark .signal-card {
+        background: rgba(30, 41, 59, 0.9);
+        border-color: var(--dark-border);
+    }
+
+    .signal-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-xl);
+    }
+
+    .signal-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+    }

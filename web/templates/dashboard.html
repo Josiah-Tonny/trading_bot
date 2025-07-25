@@ -4,79 +4,126 @@
 
 {% block extra_css %}
 <style>
-    body.dashboard-bg {
-        background: linear-gradient(135deg, #f9fafb 0%, #3B82F6 10%, #F59E0B 100%);
-        transition: background 0.5s cubic-bezier(.4,0,.2,1);
-    }
-    body.dark.dashboard-bg {
-        background: linear-gradient(135deg, #1E293B 0%, #3B82F6 100%);
-    }
     .dashboard {
-        padding: 2rem 0;
-        opacity: 0;
-        transition: opacity 0.7s cubic-bezier(.4,0,.2,1);
-    }
-    body.loaded .dashboard {
-        opacity: 1;
-    }
-    /* Skeleton Loader */
-    .skeleton {
-        background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%);
-        background-size: 200% 100%;
-        animation: skeleton-loading 1.2s infinite linear;
-        border-radius: 8px;
-    }
-    @keyframes skeleton-loading {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
-    }
-    .dark .skeleton {
-        background: linear-gradient(90deg, #232b3b 25%, #2d3748 50%, #232b3b 75%);
-    }
-    /* Smooth Navigation */
-    .action-btn, .btn, .card, .card-header, .portfolio-summary, .positions-table th, .positions-table td {
-        transition: background 0.3s, color 0.3s, box-shadow 0.3s, transform 0.2s;
-    }
-    .action-btn:active, .btn:active {
-        transform: scale(0.97);
-    }
-    /* Dashboard */
-    .dashboard {
-        padding: 2rem 0;
+        padding: 1.5rem 0;
+        background: var(--light-gray);
+        min-height: calc(100vh - 80px);
     }
 
+    .dark .dashboard {
+        background: var(--dark-bg);
+    }
+
+    /* Dashboard Header */
     .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 2rem;
+        background: var(--white);
+        padding: 2rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid var(--border-gray);
     }
 
-    .dashboard-header h1 {
+    .dark .dashboard-header {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .welcome-section h1 {
         font-size: 2.5rem;
         font-weight: 700;
         margin-bottom: 0.5rem;
         color: var(--charcoal);
+        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
-    .dark .dashboard-header h1 {
-        color: var(--dark-text);
+    .dark .welcome-section h1 {
+        background: linear-gradient(135deg, var(--dark-accent), #A855F7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
+    .account-balance {
+        text-align: right;
+    }
+
+    .balance-label {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+
+    .dark .balance-label {
+        color: var(--dark-muted);
+    }
+
+    .balance-amount {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--success-green);
+        font-family: 'SF Mono', Monaco, monospace;
+        margin-bottom: 0.5rem;
+    }
+
+    .balance-change {
+        font-size: 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+
+    /* Main Dashboard Grid */
     .dashboard-grid {
         display: grid;
-        grid-template-columns: 2fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr;
         gap: 2rem;
         margin-bottom: 2rem;
     }
 
-    .main-panel {
-        display: flex;
-        flex-direction: column;
-        gap: 2rem;
-    }
-
-    .sidebar-panel {
+    .left-column,
+    .middle-column,
+    .right-column {
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
+    }
+
+    /* Enhanced Cards */
+    .enhanced-card {
+        background: var(--white);
+        border: 1px solid var(--border-gray);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+
+    .dark .enhanced-card {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .enhanced-card:hover {
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        transform: translateY(-2px);
+    }
+
+    .dark .enhanced-card:hover {
+        box-shadow: 0 8px 30px rgba(0,0,0,0.4);
     }
 
     .card-header {
@@ -93,64 +140,200 @@
     }
 
     .card-title {
-        font-size: 1.25rem;
+        font-size: 1.1rem;
         font-weight: 600;
         color: var(--charcoal);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .dark .card-title {
         color: var(--dark-text);
     }
 
-    /* Portfolio Summary */
-    .portfolio-summary {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 2rem;
-        margin-bottom: 2rem;
-    }
-
-    .summary-item {
-        text-align: center;
-        padding: 1.5rem;
-        background: var(--white);
-        border: 1px solid var(--border-gray);
-        border-radius: 12px;
-    }
-
-    .dark .summary-item {
-        background: var(--dark-surface);
-        border-color: var(--dark-border);
-    }
-
-    .summary-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
-
-    .summary-label {
-        font-size: 0.875rem;
-        color: var(--text-muted);
-        margin-bottom: 0.75rem;
-    }
-
-    .dark .summary-label {
-        color: var(--dark-muted);
-    }
-
-    .summary-change {
-        font-size: 0.875rem;
-        font-weight: 600;
+    .card-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 0.875rem;
+    }
+
+    .card-icon.forex { background: linear-gradient(135deg, #10B981, #22C55E); color: white; }
+    .card-icon.crypto { background: linear-gradient(135deg, #F59E0B, #FCD34D); color: white; }
+    .card-icon.commodities { background: linear-gradient(135deg, #8B5CF6, #A855F7); color: white; }
+    .card-icon.buy { background: linear-gradient(135deg, #10B981, #22C55E); color: white; }
+    .card-icon.sell { background: linear-gradient(135deg, #EF4444, #F87171); color: white; }
+    .card-icon.pnl { background: linear-gradient(135deg, #1E40AF, #3B82F6); color: white; }
+    .card-icon.positions { background: linear-gradient(135deg, #7C3AED, #8B5CF6); color: white; }
+    .card-icon.news { background: linear-gradient(135deg, #0891B2, #06B6D4); color: white; }
+
+    /* Market Lists */
+    .market-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .market-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background: var(--light-gray);
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .dark .market-item {
+        background: var(--dark-bg);
+    }
+
+    .market-item:hover {
+        background: var(--border-gray);
+        transform: translateX(4px);
+    }
+
+    .dark .market-item:hover {
+        background: var(--dark-border);
+    }
+
+    .market-symbol {
+        font-weight: 600;
+        color: var(--charcoal);
+        font-size: 0.95rem;
+    }
+
+    .dark .market-symbol {
+        color: var(--dark-text);
+    }
+
+    .market-name {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 0.125rem;
+    }
+
+    .dark .market-name {
+        color: var(--dark-muted);
+    }
+
+    .market-price {
+        text-align: right;
+    }
+
+    .price-value {
+        font-weight: 600;
+        font-family: 'SF Mono', Monaco, monospace;
+        font-size: 0.95rem;
+        color: var(--charcoal);
+    }
+
+    .dark .price-value {
+        color: var(--dark-text);
+    }
+
+    .price-change {
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-top: 0.125rem;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
         gap: 0.25rem;
     }
 
-    /* Chart Container */
+    .change-positive { color: var(--success-green); }
+    .change-negative { color: var(--danger-red); }
+
+    /* P&L Summary */
+    .pnl-summary {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .pnl-item {
+        text-align: center;
+        padding: 1rem;
+        background: var(--light-gray);
+        border-radius: 8px;
+    }
+
+    .dark .pnl-item {
+        background: var(--dark-bg);
+    }
+
+    .pnl-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        font-family: 'SF Mono', Monaco, monospace;
+        margin-bottom: 0.25rem;
+    }
+
+    .pnl-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+
+    .dark .pnl-label {
+        color: var(--dark-muted);
+    }
+
+    /* Positions Summary */
+    .positions-summary {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .positions-count {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-blue);
+    }
+
+    .dark .positions-count {
+        color: var(--dark-accent);
+    }
+
+    .positions-breakdown {
+        text-align: right;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .dark .positions-breakdown {
+        color: var(--dark-muted);
+    }
+
+    .position-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border-gray);
+    }
+
+    .dark .position-item {
+        border-bottom-color: var(--dark-border);
+    }
+
+    .position-item:last-child {
+        border-bottom: none;
+    }
+
+    /* Performance Chart */
     .chart-container {
-        height: 400px;
+        height: 300px;
         background: var(--light-gray);
         border-radius: 12px;
         display: flex;
@@ -158,10 +341,13 @@
         justify-content: center;
         position: relative;
         overflow: hidden;
+        border: 2px dashed var(--border-gray);
+        margin-bottom: 1rem;
     }
 
     .dark .chart-container {
         background: var(--dark-bg);
+        border-color: var(--dark-border);
     }
 
     .chart-placeholder {
@@ -173,134 +359,93 @@
         color: var(--dark-muted);
     }
 
-    /* Positions Table */
-    .positions-table {
-        width: 100%;
-        border-collapse: collapse;
+    .chart-placeholder i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+        background: linear-gradient(135deg, var(--success-green), #22C55E);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
-    .positions-table th,
-    .positions-table td {
-        padding: 1rem;
-        text-align: left;
-        border-bottom: 1px solid var(--border-gray);
-    }
-
-    .dark .positions-table th,
-    .dark .positions-table td {
-        border-bottom-color: var(--dark-border);
-    }
-
-    .positions-table th {
+    /* Time Period Selector */
+    .time-selector {
+        display: flex;
+        gap: 0.25rem;
         background: var(--light-gray);
-        font-weight: 600;
-        font-size: 0.875rem;
-        color: var(--text-muted);
+        padding: 0.25rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
     }
 
-    .dark .positions-table th {
+    .dark .time-selector {
         background: var(--dark-bg);
+    }
+
+    .time-btn {
+        padding: 0.375rem 0.75rem;
+        border: none;
+        background: transparent;
+        border-radius: 4px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+    }
+
+    .dark .time-btn {
         color: var(--dark-muted);
     }
 
-    .symbol-cell {
-        font-weight: 600;
-        color: var(--primary-blue);
-    }
-
-    .dark .symbol-cell {
-        color: var(--dark-accent);
-    }
-
-    /* Quick Actions */
-    .quick-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-    }
-
-    .action-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        padding: 1.25rem;
-        border: 1px solid var(--border-gray);
-        border-radius: 12px;
+    .time-btn.active {
         background: var(--white);
-        color: var(--charcoal);
-        text-decoration: none;
-        font-weight: 500;
-        transition: all 0.2s ease;
-    }
-
-    .dark .action-btn {
-        background: var(--dark-bg);
-        border-color: var(--dark-border);
-        color: var(--dark-text);
-    }
-
-    .action-btn:hover {
-        border-color: var(--primary-blue);
         color: var(--primary-blue);
-        transform: translateY(-2px);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
 
-    .dark .action-btn:hover {
-        border-color: var(--dark-accent);
+    .dark .time-btn.active {
+        background: var(--dark-surface);
         color: var(--dark-accent);
     }
 
-    /* Watchlist */
-    .watchlist-item {
+    /* News Items */
+    .news-list {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem;
-        border-bottom: 1px solid var(--border-gray);
-        transition: background 0.2s ease;
+        flex-direction: column;
+        gap: 1rem;
+        max-height: 400px;
+        overflow-y: auto;
     }
 
-    .dark .watchlist-item {
-        border-bottom-color: var(--dark-border);
-    }
-
-    .watchlist-item:hover {
-        background: var(--light-gray);
-    }
-
-    .dark .watchlist-item:hover {
-        background: var(--dark-bg);
-    }
-
-    .watchlist-symbol {
-        font-weight: 600;
-        color: var(--charcoal);
-    }
-
-    .dark .watchlist-symbol {
-        color: var(--dark-text);
-    }
-
-    .watchlist-price {
-        text-align: right;
-    }
-
-    /* News */
     .news-item {
-        padding: 1rem 0;
-        border-bottom: 1px solid var(--border-gray);
+        padding: 1rem;
+        background: var(--light-gray);
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        cursor: pointer;
     }
 
     .dark .news-item {
-        border-bottom-color: var(--dark-border);
+        background: var(--dark-bg);
+    }
+
+    .news-item:hover {
+        background: var(--border-gray);
+        transform: translateY(-1px);
+    }
+
+    .dark .news-item:hover {
+        background: var(--dark-border);
     }
 
     .news-title {
         font-weight: 500;
         margin-bottom: 0.5rem;
         color: var(--charcoal);
-        line-height: 1.4;
+        line-height: 1.3;
+        font-size: 0.875rem;
     }
 
     .dark .news-title {
@@ -308,6 +453,9 @@
     }
 
     .news-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         font-size: 0.75rem;
         color: var(--text-muted);
     }
@@ -315,361 +463,422 @@
     .dark .news-meta {
         color: var(--dark-muted);
     }
+ 
+    .news-source {
+        font-weight: 500;
+    }
 
-    @media (max-width: 1024px) {
+    .news-type {
+        padding: 0.125rem 0.5rem;
+        background: var(--primary-blue);
+        color: var(--white);
+        border-radius: 12px;
+        font-size: 0.625rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .news-type.announcement {
+        background: var(--wealth-gold);
+    }
+
+    .news-type.alert {
+        background: var(--danger-red);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1400px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .right-column {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-header {
+            flex-direction: column;
+            gap: 1.5rem;
+            text-align: center;
+        }
+        
         .dashboard-grid {
             grid-template-columns: 1fr;
         }
-        .main-panel, .sidebar-panel {
-            flex-direction: column;
-            gap: 2rem;
+        
+        .balance-amount {
+            font-size: 2rem;
         }
-        .dashboard .card, .dashboard .portfolio-summary, .dashboard .main-panel > .card, .dashboard .sidebar-panel > .card {
-            margin-bottom: 1.5rem;
+
+        .pnl-summary {
+            grid-template-columns: 1fr;
         }
     }
 
     @media (max-width: 640px) {
-        .portfolio-summary {
-            grid-template-columns: 1fr;
-        }
-        .quick-actions {
-            grid-template-columns: 1fr;
-        }
-        .dashboard-header h1 {
-            font-size: 1.5rem;
-        }
-        .dashboard .card, .dashboard .portfolio-summary, .dashboard .main-panel > .card, .dashboard .sidebar-panel > .card {
-            margin-bottom: 1rem;
-        }
         .dashboard {
-            padding: 0.5rem 0;
+            padding: 1rem 0;
+        }
+        
+        .dashboard-header,
+        .enhanced-card {
+            padding: 1.25rem;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div id="skeleton-dashboard" style="display:none;">
-    <div class="skeleton" style="height: 60px; width: 60%; margin: 1.5rem auto;"></div>
-    <div class="skeleton" style="height: 120px; margin-bottom: 1.5rem;"></div>
-    <div class="skeleton" style="height: 400px; margin-bottom: 1.5rem;"></div>
-    <div class="skeleton" style="height: 120px; width: 80%; margin-bottom: 1rem;"></div>
-</div>
 <div class="container">
-    <!-- Notifications/Alerts Panel -->
-    <div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(90deg, #F59E0B11 0%, #3B82F611 100%);">
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <i class="fas fa-bell" style="color: var(--primary-blue); font-size: 1.3rem;"></i>
-            <div>
-                <strong>Alert:</strong> Scheduled maintenance on Sunday, 2:00–4:00 AM UTC. No trades will be executed during this window.
-            </div>
-        </div>
-    </div>
     <div class="dashboard">
-        <div class="dashboard-header" style="display: flex; flex-wrap: wrap; align-items: center; gap: 1rem;">
-            <h1 style="flex: 1;">Welcome back, {{ user_id }}</h1>
-            <a href="/trade" class="btn btn-outline btn-sm"><i class="fas fa-exchange-alt"></i> Trade</a>
-            <a href="/portfolio" class="btn btn-outline btn-sm"><i class="fas fa-chart-pie"></i> Portfolio</a>
-        </div>
-        <p class="text-muted">Here's your portfolio overview for December 21, 2024</p>
-
-        <!-- Subscription Status Widget -->
-        <div class="card" style="margin-bottom: 2rem; max-width: 400px;">
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <i class="fas fa-crown" style="color: var(--wealth-gold); font-size: 1.5rem;"></i>
-                <div>
-                    <div style="font-weight: 600;">Subscription: <span style="color: var(--primary-blue);">Pro Tier</span></div>
-                    <div style="font-size: 0.9rem; color: var(--text-muted);">Trial ends in 5 days • <a href="#" style="color: var(--primary-blue); text-decoration: underline;">Upgrade</a></div>
-                </div>
+        <!-- Dashboard Header with Account Balance -->
+        <div class="dashboard-header">
+            <div class="welcome-section">
+                <h1>Welcome back, {{ username }}!</h1>
+                <p style="color: var(--text-muted); font-size: 1.1rem;">
+                    <i class="fas fa-calendar-alt"></i>
+                    {{ current_date.strftime('%A, %B %d, %Y') }}
+                </p>
             </div>
-        </div>
-
-        <!-- Portfolio Summary -->
-        <div class="portfolio-summary">
-            <div class="summary-item">
-                <div class="summary-value" style="color: var(--primary-blue);">$125,750.50</div>
-                <div class="summary-label">Total Value</div>
-                <div class="summary-change text-success">
+            <div class="account-balance">
+                <div class="balance-label">Total Account Balance</div>
+                <div class="balance-amount">${{ total_balance | default('125,450.75') }}</div>
+                <div class="balance-change change-positive">
                     <i class="fas fa-arrow-up"></i>
-                    $2,750.50 (2.24%)
+                    +$2,340.50 (+1.89%) Today
                 </div>
             </div>
-            
-            <div class="summary-item">
-                <div class="summary-value text-success">$45,000.00</div>
-                <div class="summary-label">Buying Power</div>
-                <div class="summary-change text-muted">Available to trade</div>
-            </div>
-            
-            <div class="summary-item">
-                <div class="summary-value text-success">$1,250.75</div>
-                <div class="summary-label">Today's P&L</div>
-                <div class="summary-change text-success">+1.02%</div>
-            </div>
-            
-            <div class="summary-item">
-                <div class="summary-value" style="color: var(--wealth-gold);">8</div>
-                <div class="summary-label">Open Positions</div>
-                <div class="summary-change text-muted">12 total</div>
-            </div>
-        </div>
-
-        <!-- Recent Signals Feed -->
-        <div class="card" style="margin-bottom: 2rem;">
-            <div class="card-header">
-                <h3 class="card-title">Recent Signals</h3>
-            </div>
-            <ul style="list-style: none; padding: 0; margin: 0;">
-                <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-gray);">
-                    <span style="font-weight: 600; color: var(--primary-blue);">EURUSD</span> <span class="text-success">BUY</span> @ 1.0850 • TP: 1.0900 • SL: 1.0820 <span style="color: var(--text-muted); font-size: 0.9rem;">(2 min ago)</span>
-                </li>
-                <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-gray);">
-                    <span style="font-weight: 600; color: var(--danger-red);">BTCUSD</span> <span class="text-danger">SELL</span> @ 67,200 • TP: 66,000 • SL: 68,000 <span style="color: var(--text-muted); font-size: 0.9rem;">(10 min ago)</span>
-                </li>
-                <li style="padding: 0.5rem 0;">
-                    <span style="font-weight: 600; color: var(--primary-blue);">AAPL</span> <span class="text-success">BUY</span> @ $155.80 • TP: $160.00 • SL: $153.00 <span style="color: var(--text-muted); font-size: 0.9rem;">(30 min ago)</span>
-                </li>
-            </ul>
         </div>
 
         <div class="dashboard-grid">
-            <div class="main-panel">
-                <!-- Performance Summary Card -->
-                <div class="card" style="margin-bottom: 2rem;">
+            <!-- Left Column -->
+            <div class="left-column">
+                <!-- Top 5 Forex -->
+                <div class="enhanced-card">
                     <div class="card-header">
-                        <h3 class="card-title">Performance Summary</h3>
+                        <h3 class="card-title">
+                            <div class="card-icon forex">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            Top 5 Forex
+                        </h3>
+                        <a href="#" class="btn btn-outline btn-sm">View All</a>
                     </div>
-                    <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
-                        <div style="flex: 1; min-width: 120px;">
-                            <div style="font-size: 2rem; font-weight: 700; color: var(--success-green);">+68%</div>
-                            <div class="text-muted">Win Rate</div>
+                    <div class="market-list">
+                        {% set forex_pairs = [
+                            {'symbol': 'EUR/USD', 'name': 'Euro / US Dollar', 'price': '1.0845', 'change': '+0.0023', 'change_percent': '+0.21%'},
+                            {'symbol': 'GBP/USD', 'name': 'British Pound / US Dollar', 'price': '1.2634', 'change': '-0.0045', 'change_percent': '-0.35%'},
+                            {'symbol': 'USD/JPY', 'name': 'US Dollar / Japanese Yen', 'price': '149.85', 'change': '+0.67', 'change_percent': '+0.45%'},
+                            {'symbol': 'AUD/USD', 'name': 'Australian Dollar / US Dollar', 'price': '0.6523', 'change': '+0.0012', 'change_percent': '+0.18%'},
+                            {'symbol': 'USD/CAD', 'name': 'US Dollar / Canadian Dollar', 'price': '1.3789', 'change': '-0.0034', 'change_percent': '-0.25%'}
+                        ] %}
+                        {% for pair in forex_pairs %}
+                        <div class="market-item btn btn-outline btn-sm" onclick="window.location.href='{{ url_for('trade') }}'" style="cursor: pointer;">
+                            <div>
+                                <div class="market-symbol">{{ pair.symbol }}</div>
+                                <div class="market-name">{{ pair.name }}</div>
+                            </div>
+                            <div class="market-price">
+                                <div class="price-value">{{ pair.price }}</div>
+                                <div class="price-change {% if pair.change.startswith('+') %}change-positive{% else %}change-negative{% endif %}">
+                                    <i class="fas fa-arrow-{% if pair.change.startswith('+') %}up{% else %}down{% endif %}"></i>
+                                    {{ pair.change }} ({{ pair.change_percent }})
+                                </div>
+                            </div>
                         </div>
-                        <div style="flex: 1; min-width: 120px;">
-                            <div style="font-size: 2rem; font-weight: 700; color: var(--primary-blue);">$2,150</div>
-                            <div class="text-muted">Avg Gain</div>
-                        </div>
-                        <div style="flex: 1; min-width: 120px;">
-                            <div style="font-size: 2rem; font-weight: 700; color: var(--danger-red);">-$650</div>
-                            <div class="text-muted">Avg Loss</div>
-                        </div>
-                        <div style="flex: 1; min-width: 120px;">
-                            <div style="font-size: 2rem; font-weight: 700; color: var(--wealth-gold);">1.24</div>
-                            <div class="text-muted">Sharpe Ratio</div>
-                        </div>
+                        {% endfor %}
                     </div>
                 </div>
 
-                <!-- Portfolio Chart -->
-                <div class="card">
+                <!-- Top 5 Crypto -->
+                <div class="enhanced-card">
                     <div class="card-header">
-                        <h2 class="card-title">Portfolio Performance</h2>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button class="btn btn-sm btn-outline">1D</button>
-                            <button class="btn btn-sm btn-primary">1W</button>
-                            <button class="btn btn-sm btn-outline">1M</button>
-                            <button class="btn btn-sm btn-outline">1Y</button>
-                        </div>
+                        <h3 class="card-title">
+                            <div class="card-icon crypto">
+                                <i class="fab fa-bitcoin"></i>
+                            </div>
+                            Top 5 Crypto
+                        </h3>
+                        <a href="{{ url_for('support') }}" class="btn btn-outline btn-sm">View All</a>
                     </div>
-                    <div class="chart-container">
-                        <div class="chart-placeholder">
-                            <i class="fas fa-chart-area" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.3;"></i>
-                            <p style="font-size: 1.1rem;">Portfolio Performance Chart</p>
-                            <p style="font-size: 0.875rem; opacity: 0.7;">Real-time chart integration goes here</p>
+                    <div class="market-list">
+                        {% set crypto_coins = [
+                            {'symbol': 'BTC', 'name': 'Bitcoin', 'price': '$43,250.00', 'change': '+$1,250.00', 'change_percent': '+2.98%'},
+                            {'symbol': 'ETH', 'name': 'Ethereum', 'price': '$2,345.50', 'change': '-$45.25', 'change_percent': '-1.89%'},
+                            {'symbol': 'BNB', 'name': 'Binance Coin', 'price': '$245.80', 'change': '+$12.30', 'change_percent': '+5.26%'},
+                            {'symbol': 'SOL', 'name': 'Solana', 'price': '$67.45', 'change': '+$3.20', 'change_percent': '+4.98%'},
+                            {'symbol': 'ADA', 'name': 'Cardano', 'price': '$0.4523', 'change': '-$0.0123', 'change_percent': '-2.65%'}
+                        ] %}
+                        {% for coin in crypto_coins %}
+                        <div class="market-item btn btn-outline btn-sm" onclick="window.location.href='{{ url_for('trade') }}'" style="cursor: pointer;">
+                            <div>
+                                <div class="market-symbol">{{ coin.symbol }}</div>
+                                <div class="market-name">{{ coin.name }}</div>
+                            </div>
+                            <div class="market-price">
+                                <div class="price-value">{{ coin.price }}</div>
+                                <div class="price-change {% if coin.change.startswith('+') %}change-positive{% else %}change-negative{% endif %}">
+                                    <i class="fas fa-arrow-{% if coin.change.startswith('+') %}up{% else %}down{% endif %}"></i>
+                                    {{ coin.change }} ({{ coin.change_percent }})
+                                </div>
+                            </div>
                         </div>
+                        {% endfor %}
                     </div>
                 </div>
 
-                <!-- Current Positions -->
-                <div class="card">
+                <!-- Top 5 Commodities -->
+                <div class="enhanced-card">
                     <div class="card-header">
-                        <h2 class="card-title">Current Positions</h2>
-                        <a href="/portfolio" class="btn btn-sm btn-primary">View All</a>
+                        <h3 class="card-title">
+                            <div class="card-icon commodities">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            Top 5 Commodities
+                        </h3>
+                        <a href="{{ url_for('trade') }}" class="btn btn-outline btn-sm">View All</a>
                     </div>
-                    
-                    <table class="positions-table">
-                        <thead>
-                            <tr>
-                                <th>Symbol</th>
-                                <th>Quantity</th>
-                                <th>Avg Cost</th>
-                                <th>Current Price</th>
-                                <th>Market Value</th>
-                                <th>P&L</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="symbol-cell">AAPL</td>
-                                <td>100</td>
-                                <td class="font-mono">$150.25</td>
-                                <td class="font-mono">$155.80</td>
-                                <td class="font-mono">$15,580.00</td>
-                                <td class="font-mono text-success">
-                                    +$555.00<br>
-                                    <small>(+3.69%)</small>
-                                </td>
-                                <td>
-                                    <div style="display: flex; gap: 0.5rem;">
-                                        <button class="btn btn-sm btn-success">Buy</button>
-                                        <button class="btn btn-sm btn-danger">Sell</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="symbol-cell">TSLA</td>
-                                <td>50</td>
-                                <td class="font-mono">$220.50</td>
-                                <td class="font-mono">$215.30</td>
-                                <td class="font-mono">$10,765.00</td>
-                                <td class="font-mono text-danger">
-                                    -$260.00<br>
-                                    <small>(-2.36%)</small>
-                                </td>
-                                <td>
-                                    <div style="display: flex; gap: 0.5rem;">
-                                        <button class="btn btn-sm btn-success">Buy</button>
-                                        <button class="btn btn-sm btn-danger">Sell</button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="symbol-cell">MSFT</td>
-                                <td>75</td>
-                                <td class="font-mono">$280.00</td>
-                                <td class="font-mono">$285.50</td>
-                                <td class="font-mono">$21,412.50</td>
-                                <td class="font-mono text-success">
-                                    +$412.50<br>
-                                    <small>(+1.96%)</small>
-                                </td>
-                                <td>
-                                    <div style="display: flex; gap: 0.5rem;">
-                                        <button class="btn btn-sm btn-success">Buy</button>
-                                        <button class="btn btn-sm btn-danger">Sell</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="market-list">
+                        {% set commodities = [
+                            {'symbol': 'GOLD', 'name': 'Gold Futures', 'price': '$2,045.50', 'change': '+$15.25', 'change_percent': '+0.75%'},
+                            {'symbol': 'SILVER', 'name': 'Silver Futures', 'price': '$24.85', 'change': '-$0.45', 'change_percent': '-1.78%'},
+                            {'symbol': 'OIL', 'name': 'Crude Oil WTI', 'price': '$78.90', 'change': '+$2.10', 'change_percent': '+2.73%'},
+                            {'symbol': 'NATGAS', 'name': 'Natural Gas', 'price': '$2.85', 'change': '-$0.12', 'change_percent': '-4.04%'},
+                            {'symbol': 'COPPER', 'name': 'Copper Futures', 'price': '$3.78', 'change': '+$0.08', 'change_percent': '+2.16%'}
+                        ] %}
+                        {% for commodity in commodities %}
+                        <div class="market-item btn btn-outline btn-sm" onclick="window.location.href='{{ url_for('trade') }}'" style="cursor: pointer;">
+                            <div>
+                                <div class="market-symbol">{{ commodity.symbol }}</div>
+                                <div class="market-name">{{ commodity.name }}</div>
+                            </div>
+                            <div class="market-price">
+                                <div class="price-value">{{ commodity.price }}</div>
+                                <div class="price-change {% if commodity.change.startswith('+') %}change-positive{% else %}change-negative{% endif %}">
+                                    <i class="fas fa-arrow-{% if commodity.change.startswith('+') %}up{% else %}down{% endif %}"></i>
+                                    {{ commodity.change }} ({{ commodity.change_percent }})
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
 
-            <div class="sidebar-panel">
-                <!-- Quick Actions -->
-                <div class="card">
+            <!-- Middle Column -->
+            <div class="middle-column">
+                <!-- Performance Graph -->
+                <div class="enhanced-card">
                     <div class="card-header">
-                        <h3 class="card-title">Quick Actions</h3>
+                        <h3 class="card-title">
+                            <div class="card-icon pnl">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            Your Performance
+                        </h3>
                     </div>
-                    <div class="quick-actions">
-                        <a href="/trade" class="action-btn">
-                            <i class="fas fa-plus"></i>
-                            New Trade
-                        </a>
-                        <a href="/portfolio" class="action-btn">
-                            <i class="fas fa-chart-pie"></i>
-                            Portfolio
-                        </a>
-                        <a href="/watchlist" class="action-btn">
-                            <i class="fas fa-eye"></i>
-                            Watchlist
-                        </a>
-                        <a href="/analysis" class="action-btn">
-                            <i class="fas fa-chart-bar"></i>
-                            Analysis
-                        </a>
+                    <div class="time-selector">
+                        <button class="time-btn">1D</button>
+                        <button class="time-btn active">1W</button>
+                        <button class="time-btn">1M</button>
+                        <button class="time-btn">3M</button>
+                        <button class="time-btn">1Y</button>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-placeholder">
+                            <i class="fas fa-chart-area"></i>
+                            <p style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;">Portfolio Performance</p>
+                            <p style="font-size: 0.875rem; opacity: 0.7;">+12.5% This Week</p>
+                            <p style="font-size: 0.75rem; opacity: 0.5; margin-top: 1rem;">Chart integration: TradingView, Chart.js</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Watchlist -->
-                <div class="card">
+                <!-- Today's P&L -->
+                <div class="enhanced-card">
                     <div class="card-header">
-                        <h3 class="card-title">Watchlist</h3>
-                        <a href="/watchlist" class="btn btn-sm btn-outline">Manage</a>
+                        <h3 class="card-title">
+                            <div class="card-icon pnl">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            Today's P&L
+                        </h3>
                     </div>
-                    
+                    <div class="pnl-summary">
+                        <div class="pnl-item">
+                            <div class="pnl-value change-positive">+$2,340.50</div>
+                            <div class="pnl-label">Realized P&L</div>
+                        </div>
+                        <div class="pnl-item">
+                            <div class="pnl-value change-positive">+$1,890.25</div>
+                            <div class="pnl-label">Unrealized P&L</div>
+                        </div>
+                        <div class="pnl-item">
+                            <div class="pnl-value change-positive">+$4,230.75</div>
+                            <div class="pnl-label">Total P&L</div>
+                        </div>
+                        <div class="pnl-item">
+                            <div class="pnl-value change-positive">+3.37%</div>
+                            <div class="pnl-label">Return %</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top 5 Buy Today -->
+                <div class="enhanced-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <div class="card-icon buy">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                            Top 5 Buy Today
+                        </h3>
+                    </div>
+                    <div class="market-list">
+                        {% set top_buys = [
+                            {'symbol': 'AAPL', 'name': 'Apple Inc.', 'volume': '2.5M', 'change': '+2.45%'},
+                            {'symbol': 'MSFT', 'name': 'Microsoft Corp.', 'volume': '1.8M', 'change': '+1.89%'},
+                            {'symbol': 'NVDA', 'name': 'NVIDIA Corp.', 'volume': '3.2M', 'change': '+4.56%'},
+                            {'symbol': 'TSLA', 'name': 'Tesla Inc.', 'volume': '4.1M', 'change': '+3.21%'},
+                            {'symbol': 'GOOGL', 'name': 'Alphabet Inc.', 'volume': '1.2M', 'change': '+1.67%'}
+                        ] %}
+                        {% for stock in top_buys %}
+                        <div class="market-item">
+                            <div>
+                                <div class="market-symbol">{{ stock.symbol }}</div>
+                                <div class="market-name">{{ stock.name }}</div>
+                            </div>
+                            <div class="market-price">
+                                <div class="price-value">{{ stock.volume }}</div>
+                                <div class="price-change change-positive">
+                                    <i class="fas fa-arrow-up"></i>
+                                    {{ stock.change }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Top 5 Sell Today -->
+                <div class="enhanced-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <div class="card-icon sell">
+                                <i class="fas fa-arrow-down"></i>
+                            </div>
+                            Top 5 Sell Today
+                        </h3>
+                    </div>
+                    <div class="market-list">
+                        {% set top_sells = [
+                            {'symbol': 'META', 'name': 'Meta Platforms', 'volume': '1.9M', 'change': '-2.34%'},
+                            {'symbol': 'NFLX', 'name': 'Netflix Inc.', 'volume': '0.8M', 'change': '-1.45%'},
+                            {'symbol': 'AMZN', 'name': 'Amazon.com Inc.', 'volume': '2.1M', 'change': '-0.89%'},
+                            {'symbol': 'AMD', 'name': 'Advanced Micro Devices', 'volume': '3.5M', 'change': '-3.12%'},
+                            {'symbol': 'INTC', 'name': 'Intel Corp.', 'volume': '2.7M', 'change': '-2.78%'}
+                        ] %}
+                        {% for stock in top_sells %}
+                        <div class="market-item">
+                            <div>
+                                <div class="market-symbol">{{ stock.symbol }}</div>
+                                <div class="market-name">{{ stock.name }}</div>
+                            </div>
+                            <div class="market-price">
+                                <div class="price-value">{{ stock.volume }}</div>
+                                <div class="price-change change-negative">
+                                    <i class="fas fa-arrow-down"></i>
+                                    {{ stock.change }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="right-column">
+                <!-- Total Open Positions -->
+                <div class="enhanced-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <div class="card-icon positions">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+                            Open Positions
+                        </h3>
+                        <a href="{{ url_for('portfolio') }}" class="btn btn-outline btn-sm">View All</a>
+                    </div>
+                    <div class="positions-summary">
+                        <div class="positions-count">{{ portfolio.open_positions | default('12') }}</div>
+                        <div class="positions-breakdown">
+                            <div>{{ portfolio.winning_positions | default('8') }} Winning</div>
+                            <div>{{ portfolio.losing_positions | default('4') }} Losing</div>
+                        </div>
+                    </div>
                     <div>
-                        <div class="watchlist-item">
+                        {% set recent_positions = [
+                            {'symbol': 'AAPL', 'quantity': '100', 'pnl': '+$450.25', 'pnl_percent': '+2.45%'},
+                            {'symbol': 'MSFT', 'quantity': '75', 'pnl': '+$320.50', 'pnl_percent': '+1.89%'},
+                            {'symbol': 'TSLA', 'quantity': '50', 'pnl': '-$125.75', 'pnl_percent': '-1.23%'},
+                            {'symbol': 'NVDA', 'quantity': '25', 'pnl': '+$890.00', 'pnl_percent': '+4.56%'},
+                            {'symbol': 'GOOGL', 'quantity': '60', 'pnl': '+$234.80', 'pnl_percent': '+1.67%'}
+                        ] %}
+                        {% for position in recent_positions %}
+                        <div class="position-item">
                             <div>
-                                <div class="watchlist-symbol">AAPL</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">Apple Inc.</div>
+                                <div class="market-symbol">{{ position.symbol }}</div>
+                                <div class="market-name">{{ position.quantity }} shares</div>
                             </div>
-                            <div class="watchlist-price">
-                                <div class="font-mono">$155.80</div>
-                                <div class="text-success" style="font-size: 0.875rem;">+2.45 (+1.60%)</div>
+                            <div class="market-price">
+                                <div class="price-value {% if position.pnl.startswith('+') %}change-positive{% else %}change-negative{% endif %}">
+                                    {{ position.pnl }}
+                                </div>
+                                <div class="price-change {% if position.pnl.startswith('+') %}change-positive{% else %}change-negative{% endif %}">
+                                    {{ position.pnl_percent }}
+                                </div>
                             </div>
                         </div>
-                        
-                        <div class="watchlist-item">
-                            <div>
-                                <div class="watchlist-symbol">GOOGL</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">Alphabet Inc.</div>
-                            </div>
-                            <div class="watchlist-price">
-                                <div class="font-mono">$2,750.30</div>
-                                <div class="text-danger" style="font-size: 0.875rem;">-15.20 (-0.55%)</div>
-                            </div>
-                        </div>
-                        
-                        <div class="watchlist-item">
-                            <div>
-                                <div class="watchlist-symbol">AMZN</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">Amazon.com Inc.</div>
-                            </div>
-                            <div class="watchlist-price">
-                                <div class="font-mono">$3,380.50</div>
-                                <div class="text-success" style="font-size: 0.875rem;">+45.30 (+1.36%)</div>
-                            </div>
-                        </div>
+                        {% endfor %}
                     </div>
                 </div>
 
-                <!-- Market News -->
-                <div class="card">
+                <!-- Market News & Announcements -->
+                <div class="enhanced-card">
                     <div class="card-header">
-                        <h3 class="card-title">Market News</h3>
+                        <h3 class="card-title">
+                            <div class="card-icon news">
+                                <i class="fas fa-newspaper"></i>
+                            </div>
+                            News & Announcements
+                        </h3>
+                        <a href="#" class="btn btn-outline btn-sm">View All</a>
                     </div>
-                    
-                    <div>
-                        <div class="news-item">
-                            <div class="news-title">Market Opens Higher on Strong Earnings Reports</div>
-                            <div class="news-meta">MarketWatch • 2 hours ago</div>
+                    <div class="news-list">
+                        {% set news_items = [
+                            {'title': 'Fed Announces Interest Rate Decision', 'source': 'Reuters', 'time': '2 min ago', 'type': 'announcement'},
+                            {'title': 'Apple Reports Strong Q4 Earnings', 'source': 'Bloomberg', 'time': '15 min ago', 'type': 'news'},
+                            {'title': 'Bitcoin Breaks $44,000 Resistance', 'source': 'CoinDesk', 'time': '32 min ago', 'type': 'alert'},
+                            {'title': 'Oil Prices Surge on Supply Concerns', 'source': 'MarketWatch', 'time': '1 hr ago', 'type': 'news'},
+                            {'title': 'Tesla Announces New Gigafactory', 'source': 'TechCrunch', 'time': '2 hr ago', 'type': 'announcement'},
+                            {'title': 'Gold Hits New Monthly High', 'source': 'Financial Times', 'time': '3 hr ago', 'type': 'alert'}
+                        ] %}
+                        {% for article in news_items %}
+                        <div class="news-item" onclick="window.open('#', '_blank')">
+                            <div class="news-title">{{ article.title }}</div>
+                            <div class="news-meta">
+                                <span class="news-source">{{ article.source }}</span>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span>{{ article.time }}</span>
+                                    <span class="news-type {{ article.type }}">{{ article.type }}</span>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <div class="news-item">
-                            <div class="news-title">Tech Stocks Rally Continues Into Third Week</div>
-                            <div class="news-meta">Bloomberg • 4 hours ago</div>
-                        </div>
-                        
-                        <div class="news-item">
-                            <div class="news-title">Federal Reserve Signals Potential Rate Changes</div>
-                            <div class="news-meta">Reuters • 6 hours ago</div>
-                        </div>
-                        
-                        <div class="news-item">
-                            <div class="news-title">Energy Sector Shows Strong Performance</div>
-                            <div class="news-meta">CNBC • 8 hours ago</div>
-                        </div>
+                        {% endfor %}
                     </div>
-                </div>
-
-                <!-- Announcements/Updates Section -->
-                <div class="card" style="margin-top: 2rem; background: linear-gradient(90deg, #3B82F622 0%, #F59E0B22 100%);">
-                    <div class="card-header">
-                        <h3 class="card-title">Announcements</h3>
-                    </div>
-                    <ul style="list-style: none; padding: 0; margin: 0;">
-                        <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-gray);">
-                            <strong>New Feature:</strong> Multi-timeframe signals now available!
-                        </li>
-                        <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-gray);">
-                            <strong>Update:</strong> Improved risk management tools released.
-                        </li>
-                        <li style="padding: 0.5rem 0;">
-                            <strong>Tip:</strong> Check out our new video tutorials in the Help section.
-                        </li>
-                    </ul>
                 </div>
             </div>
         </div>
@@ -679,18 +888,71 @@
 
 {% block extra_js %}
 <script>
-    // Dashboard skeleton loader and smooth loading
-    document.addEventListener('DOMContentLoaded', function() {
-        document.body.classList.add('dashboard-bg');
-        const dashboard = document.querySelector('.dashboard');
-        const skeleton = document.getElementById('skeleton-dashboard');
-        skeleton.style.display = 'block';
-        dashboard.style.opacity = 0;
-        setTimeout(() => {
-            skeleton.style.display = 'none';
-            document.body.classList.add('loaded');
-            dashboard.style.opacity = 1;
-        }, 1200); // Simulate loading
+    // Time period selector functionality
+    document.querySelectorAll('.time-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update chart data based on selected period
+            updatePerformanceChart(this.textContent);
+        });
     });
+
+    function updatePerformanceChart(period) {
+        console.log('Updating chart for period:', period);
+        // Here you would integrate with your charting library
+        // Example: Chart.js, TradingView, or custom implementation
+    }
+
+    // Real-time price updates (simulate)
+    function updatePrices() {
+        document.querySelectorAll('.price-value').forEach(element => {
+            // Simulate price fluctuations
+            const currentPrice = parseFloat(element.textContent.replace(/[$,]/g, ''));
+            if (!isNaN(currentPrice)) {
+                const change = (Math.random() - 0.5) * 0.02; // ±1% change
+                const newPrice = currentPrice * (1 + change);
+                
+                if (element.textContent.includes('$')) {
+                    element.textContent = '$' + newPrice.toFixed(2);
+                } else {
+                    element.textContent = newPrice.toFixed(4);
+                }
+            }
+        });
+    }
+
+    // Update prices every 30 seconds (for demo)
+    setInterval(updatePrices, 30000);
+
+    // Add click handlers for market items
+    document.querySelectorAll('.market-item').forEach(item => {
+        item.style.cursor = 'pointer';
+        item.addEventListener('click', function() {
+            const symbol = this.querySelector('.market-symbol').textContent;
+            console.log('Clicked on:', symbol);
+            // Navigate to trading page or show details
+        });
+    });
+
+    // Animate cards on load
+    const cards = document.querySelectorAll('.enhanced-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+
+    // Auto-refresh news every 5 minutes
+    setInterval(() => {
+        console.log('Refreshing news...');
+        // Implement news refresh logic
+    }, 300000);
 </script>
 {% endblock %}

@@ -1,534 +1,126 @@
 {% extends "base.html" %}
 
-{% block title %}Create Account - TradePro{% endblock %}
+{% block title %}Register - TradePro{% endblock %}
 
 {% block extra_css %}
 <style>
     .register-container {
-        min-height: calc(100vh - 80px);
+        min-height: calc(100vh - 200px);
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 2rem 0;
-        background: linear-gradient(135deg, var(--light-gray) 0%, var(--white) 100%);
-    }
-
-    .dark .register-container {
-        background: linear-gradient(135deg, var(--dark-bg) 0%, var(--dark-surface) 100%);
     }
 
     .register-card {
-        background: var(--white);
-        padding: 3rem;
+        background: white;
+        padding: 2.5rem;
         border-radius: 16px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
         width: 100%;
         max-width: 500px;
-        border: 1px solid var(--border-gray);
-    }
-
-    .dark .register-card {
-        background: var(--dark-surface);
-        border-color: var(--dark-border);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        border: 1px solid #E5E7EB;
     }
 
     .register-header {
         text-align: center;
-        margin-bottom: 2.5rem;
+        margin-bottom: 2rem;
     }
 
     .register-header h2 {
-        color: var(--primary-blue);
-        font-size: 2.25rem;
+        color: #1E40AF;
+        font-size: 2rem;
         font-weight: 700;
         margin-bottom: 0.5rem;
     }
 
-    .dark .register-header h2 {
-        color: var(--dark-accent);
-    }
-
     .register-header p {
-        color: var(--text-muted);
-        font-size: 1.1rem;
-    }
-
-    .dark .register-header p {
-        color: var(--dark-muted);
-    }
-
-    /* Registration Method Tabs */
-    .registration-tabs {
-        display: flex;
-        background: var(--light-gray);
-        border-radius: 12px;
-        padding: 0.5rem;
-        margin-bottom: 2rem;
-        gap: 0.5rem;
-    }
-
-    .dark .registration-tabs {
-        background: var(--dark-bg);
-    }
-
-    .tab-button {
-        flex: 1;
-        padding: 1rem;
-        border: none;
-        background: transparent;
-        border-radius: 8px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        color: var(--text-muted);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-    }
-
-    .dark .tab-button {
-        color: var(--dark-muted);
-    }
-
-    .tab-button.active {
-        background: var(--white);
-        color: var(--primary-blue);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .dark .tab-button.active {
-        background: var(--dark-surface);
-        color: var(--dark-accent);
-    }
-
-    .tab-button:hover:not(.active) {
-        color: var(--charcoal);
-    }
-
-    .dark .tab-button:hover:not(.active) {
-        color: var(--dark-text);
-    }
-
-    /* Tab Content */
-    .tab-content {
-        display: none;
-    }
-
-    .tab-content.active {
-        display: block;
-    }
-
-    /* Telegram Login Section */
-    .telegram-login-section {
-        text-align: center;
-        padding: 2rem 0;
-    }
-
-    .telegram-benefits {
-        background: var(--light-gray);
-        padding: 2rem;
-        border-radius: 12px;
-        margin-bottom: 2rem;
-    }
-
-    .dark .telegram-benefits {
-        background: var(--dark-bg);
-    }
-
-    .telegram-benefits h3 {
-        color: var(--charcoal);
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-    }
-
-    .dark .telegram-benefits h3 {
-        color: var(--dark-text);
-    }
-
-    .benefits-list {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-        text-align: left;
-    }
-
-    .benefit-item {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-size: 0.875rem;
-        color: var(--text-muted);
-    }
-
-    .dark .benefit-item {
-        color: var(--dark-muted);
-    }
-
-    .benefit-icon {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: var(--success-green);
-        color: var(--white);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.75rem;
-        flex-shrink: 0;
-    }
-
-    .telegram-login-widget {
-        margin: 2rem 0;
-        display: flex;
-        justify-content: center;
-    }
-
-    .telegram-fallback {
-        background: #0088cc;
-        color: white;
-        padding: 1rem 2rem;
-        border: none;
-        border-radius: 8px;
-        font-weight: 500;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: all 0.2s ease;
-    }
-
-    .telegram-fallback:hover {
-        background: #006ba3;
-        transform: translateY(-1px);
-        color: white;
-        text-decoration: none;
-    }
-
-    /* Email Form Styles */
-    .form-group {
-        margin-bottom: 1.5rem;
+        color: #6B7280;
+        font-size: 1rem;
     }
 
     .form-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
     }
 
     .form-label {
         display: block;
+        font-weight: 500;
         margin-bottom: 0.5rem;
-        font-weight: 600;
-        color: var(--charcoal);
-        font-size: 0.875rem;
-    }
-
-    .dark .form-label {
-        color: var(--dark-text);
+        color: #374151;
     }
 
     .form-control {
         width: 100%;
-        padding: 0.875rem;
-        border: 2px solid var(--border-gray);
-        border-radius: 8px;
+        padding: 0.75rem;
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
         font-size: 1rem;
-        transition: all 0.2s ease;
-        background: var(--white);
-        color: var(--charcoal);
-    }
-
-    .dark .form-control {
-        background: var(--dark-bg);
-        border-color: var(--dark-border);
-        color: var(--dark-text);
+        background: white;
+        color: #111827;
+        transition: border-color 0.2s;
     }
 
     .form-control:focus {
         outline: none;
-        border-color: var(--primary-blue);
+        border-color: #1E40AF;
         box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
     }
 
-    .dark .form-control:focus {
-        border-color: var(--dark-accent);
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-    }
-
-    .form-control.error {
-        border-color: var(--danger-red);
-    }
-
     .form-help {
-        font-size: 0.75rem;
-        color: var(--text-muted);
+        font-size: 0.8rem;
+        color: #6B7280;
         margin-top: 0.25rem;
     }
 
-    .dark .form-help {
-        color: var(--dark-muted);
-    }
-
-    .password-strength {
-        margin-top: 0.5rem;
-    }
-
-    .strength-bar {
-        height: 4px;
-        background: var(--border-gray);
-        border-radius: 2px;
-        overflow: hidden;
-        margin-bottom: 0.5rem;
-    }
-
-    .dark .strength-bar {
-        background: var(--dark-border);
-    }
-
-    .strength-fill {
-        height: 100%;
-        transition: all 0.3s ease;
-        border-radius: 2px;
-    }
-
-    .strength-weak { background: var(--danger-red); width: 25%; }
-    .strength-fair { background: #F59E0B; width: 50%; }
-    .strength-good { background: var(--success-green); width: 75%; }
-    .strength-strong { background: var(--success-green); width: 100%; }
-
-    .strength-text {
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-
-    .risk-tolerance {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
-        margin-top: 0.5rem;
-    }
-
-    .risk-option {
-        position: relative;
-    }
-
-    .risk-option input[type="radio"] {
-        position: absolute;
-        opacity: 0;
+    .btn-register {
         width: 100%;
-        height: 100%;
-        cursor: pointer;
-    }
-
-    .risk-label {
-        display: block;
-        padding: 1rem;
-        border: 2px solid var(--border-gray);
-        border-radius: 8px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        background: var(--white);
-    }
-
-    .dark .risk-label {
-        background: var(--dark-bg);
-        border-color: var(--dark-border);
-        color: var(--dark-text);
-    }
-
-    .risk-option input[type="radio"]:checked + .risk-label {
-        border-color: var(--primary-blue);
-        background: rgba(30, 64, 175, 0.05);
-        color: var(--primary-blue);
-    }
-
-    .dark .risk-option input[type="radio"]:checked + .risk-label {
-        border-color: var(--dark-accent);
-        background: rgba(139, 92, 246, 0.1);
-        color: var(--dark-accent);
-    }
-
-    .risk-title {
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-    }
-
-    .risk-desc {
-        font-size: 0.75rem;
-        opacity: 0.8;
-    }
-
-    .terms-section {
-        background: var(--light-gray);
-        padding: 1.5rem;
-        border-radius: 8px;
-        margin: 1.5rem 0;
-    }
-
-    .dark .terms-section {
-        background: var(--dark-bg);
-    }
-
-    .terms-check {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-    }
-
-    .terms-check:last-child {
-        margin-bottom: 0;
-    }
-
-    .terms-check input[type="checkbox"] {
-        margin-top: 0.125rem;
-        flex-shrink: 0;
-    }
-
-    .terms-check label {
-        font-size: 0.875rem;
-        line-height: 1.5;
-        color: var(--charcoal);
-        cursor: pointer;
-    }
-
-    .dark .terms-check label {
-        color: var(--dark-text);
-    }
-
-    .terms-check a {
-        color: var(--primary-blue);
-        text-decoration: none;
-    }
-
-    .dark .terms-check a {
-        color: var(--dark-accent);
-    }
-
-    .terms-check a:hover {
-        text-decoration: underline;
-    }
-
-    .btn-full {
-        width: 100%;
-        padding: 1rem;
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-bottom: 1.5rem;
-    }
-
-    .security-features {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
-        margin: 2rem 0;
-        padding: 1.5rem;
-        background: var(--light-gray);
-        border-radius: 8px;
-    }
-
-    .dark .security-features {
-        background: var(--dark-bg);
-    }
-
-    .security-item {
-        text-align: center;
-    }
-
-    .security-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 0.5rem;
-        font-size: 1.25rem;
-    }
-
-    .security-icon.encryption {
-        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
-        color: var(--white);
-    }
-
-    .security-icon.insurance {
-        background: linear-gradient(135deg, var(--success-green), #22C55E);
-        color: var(--white);
-    }
-
-    .security-icon.compliance {
-        background: linear-gradient(135deg, var(--wealth-gold), #FCD34D);
-        color: var(--white);
-    }
-
-    .security-text {
-        font-size: 0.75rem;
+        padding: 0.75rem;
+        background: #1E40AF;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
         font-weight: 500;
-        color: var(--charcoal);
+        cursor: pointer;
+        transition: background 0.2s;
+        margin-top: 1rem;
     }
 
-    .dark .security-text {
-        color: var(--dark-text);
+    .btn-register:hover {
+        background: #1D4ED8;
     }
 
-    .register-footer {
+    .login-link {
         text-align: center;
-        margin-top: 2rem;
-        padding-top: 2rem;
-        border-top: 1px solid var(--border-gray);
+        margin-top: 1.5rem;
     }
 
-    .dark .register-footer {
-        border-top-color: var(--dark-border);
-    }
-
-    .register-footer a {
-        color: var(--primary-blue);
+    .login-link a {
+        color: #1E40AF;
         text-decoration: none;
         font-weight: 500;
     }
 
-    .dark .register-footer a {
-        color: var(--dark-accent);
-    }
-
-    .register-footer a:hover {
+    .login-link a:hover {
         text-decoration: underline;
     }
 
-    @media (max-width: 640px) {
-        .register-card {
-            padding: 2rem 1.5rem;
-            margin: 1rem;
-        }
-        
+    @media (max-width: 600px) {
         .form-row {
             grid-template-columns: 1fr;
         }
         
-        .risk-tolerance {
-            grid-template-columns: 1fr;
-        }
-        
-        .security-features {
-            grid-template-columns: 1fr;
-        }
-
-        .benefits-list {
-            grid-template-columns: 1fr;
-        }
-
-        .registration-tabs {
-            flex-direction: column;
+        .register-card {
+            padding: 2rem 1.5rem;
+            margin: 1rem;
         }
     }
 </style>
@@ -542,321 +134,61 @@
             <p>Join thousands of traders on TradePro</p>
         </div>
 
-        <div class="registration-tabs">
-            <button class="tab-button active" onclick="switchTab('email')" id="emailTab">
-                <i class="fas fa-envelope"></i>
-                Email Registration
-            </button>
-            <button class="tab-button" onclick="switchTab('telegram')" id="telegramTab">
-                <i class="fab fa-telegram-plane"></i>
-                Telegram Login
-            </button>
-        </div>
-
-        <div id="emailContent" class="tab-content active">
-            <form action="/register" method="POST" id="registerForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">First Name</label>
-                        <input type="text" name="first_name" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Last Name</label>
-                        <input type="text" name="last_name" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Username</label>
-                        <input type="text" name="username" class="form-control" required>
-                    </div>
-                </div>
-
+        <form method="POST" action="{{ url_for('register') }}">
+            <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input type="email" name="email" class="form-control" required>
-                    <div class="form-help">We'll use this for account notifications and security alerts</div>
+                    <label class="form-label">First Name</label>
+                    <input type="text" name="first_name" class="form-control" required>
                 </div>
-
                 <div class="form-group">
-                    <label class="form-label">Phone</label>
-                    <input type="tel" name="phone" class="form-control">
-                    <div class="form-help">Optional: For two-factor authentication and account recovery</div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" name="password" id="password" class="form-control" required>
-                    <div class="password-strength">
-                        <div class="strength-bar">
-                            <div class="strength-fill" id="strengthFill"></div>
-                        </div>
-                        <div class="strength-text" id="strengthText">Password strength: Weak</div>
-                    </div>
-                    <div class="form-help">Must be at least 8 characters with uppercase, lowercase, number, and symbol</div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Confirm Password</label>
-                    <input type="password" name="confirm_password" id="confirmPassword" class="form-control" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Risk Tolerance</label>
-                    <div class="risk-tolerance">
-                        <div class="risk-option">
-                            <input type="radio" name="risk_tolerance" value="conservative" id="conservative" required>
-                            <label for="conservative" class="risk-label">
-                                <div class="risk-title">Conservative</div>
-                                <div class="risk-desc">Prefer stable, low-risk investments</div>
-                            </label>
-                        </div>
-                        <div class="risk-option">
-                            <input type="radio" name="risk_tolerance" value="moderate" id="moderate">
-                            <label for="moderate" class="risk-label">
-                                <div class="risk-title">Moderate</div>
-                                <div class="risk-desc">Balanced approach to risk and return</div>
-                            </label>
-                        </div>
-                        <div class="risk-option">
-                            <input type="radio" name="risk_tolerance" value="aggressive" id="aggressive">
-                            <label for="aggressive" class="risk-label">
-                                <div class="risk-title">Aggressive</div>
-                                <div class="risk-desc">Comfortable with high-risk investments</div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="security-features">
-                    <div class="security-item">
-                        <div class="security-icon encryption">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <div class="security-text">256-bit Encryption</div>
-                    </div>
-                    <div class="security-item">
-                        <div class="security-icon insurance">
-                            <i class="fas fa-umbrella"></i>
-                        </div>
-                        <div class="security-text">SIPC Insured</div>
-                    </div>
-                    <div class="security-item">
-                        <div class="security-icon compliance">
-                            <i class="fas fa-certificate"></i>
-                        </div>
-                        <div class="security-text">SEC Regulated</div>
-                    </div>
-                </div>
-
-                <div class="terms-section">
-                    <div class="terms-check">
-                        <input type="checkbox" name="terms_accepted" id="terms_accepted" required>
-                        <label for="terms_accepted">I accept the terms and conditions</label>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-full">
-                    <i class="fas fa-user-plus"></i>
-                    Create Account
-                </button>
-            </form>
-        </div>
-
-        <div id="telegramContent" class="tab-content">
-            <div class="telegram-login-section">
-                <div class="telegram-benefits">
-                    <h3>
-                        <i class="fab fa-telegram-plane" style="color: #0088cc;"></i>
-                        Why use Telegram?
-                    </h3>
-                    <div class="benefits-list">
-                        <div class="benefit-item">
-                            <div class="benefit-icon">
-                                <i class="fas fa-check"></i>
-                            </div>
-                            <span>Instant login</span>
-                        </div>
-                        <div class="benefit-item">
-                            <div class="benefit-icon">
-                                <i class="fas fa-check"></i>
-                            </div>
-                            <span>Real-time alerts</span>
-                        </div>
-                        <div class="benefit-item">
-                            <div class="benefit-icon">
-                                <i class="fas fa-check"></i>
-                            </div>
-                            <span>Portfolio updates</span>
-                        </div>
-                        <div class="benefit-item">
-                            <div class="benefit-icon">
-                                <i class="fas fa-check"></i>
-                            </div>
-                            <span>Price notifications</span>
-                        </div>
-                        <div class="benefit-item">
-                            <div class="benefit-icon">
-                                <i class="fas fa-check"></i>
-                            </div>
-                            <span>Trade confirmations</span>
-                        </div>
-                        <div class="benefit-item">
-                            <div class="benefit-icon">
-                                <i class="fas fa-check"></i>
-                            </div>
-                            <span>Market insights</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="telegram-login-widget">
-                    <script async src="https://telegram.org/js/telegram-widget.js?22" 
-                            data-telegram-login="TradePro_Bot" 
-                            data-size="large" 
-                            data-radius="8"
-                            data-auth-url="{{ url_for('telegram_auth', _external=True) }}" 
-                            data-request-access="write">
-                    </script>
-                </div>
-
-                <a href="https://t.me/TradePro_Bot?start=register" 
-                   class="telegram-fallback" 
-                   target="_blank"
-                   id="telegramFallback"
-                   style="display: none;">
-                    <i class="fab fa-telegram-plane"></i>
-                    Open Telegram Bot 
-                </a>
-
-                <div style="margin-top: 2rem; padding: 1.5rem; background: var(--light-gray); border-radius: 8px; font-size: 0.875rem; color: var(--text-muted);">
-                    <div class="dark" style="background: var(--dark-bg);">
-                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
-                            <i class="fas fa-info-circle" style="color: var(--primary-blue);"></i>
-                            <strong>How it works:</strong>
-                        </div>
-                        <ol style="margin: 0; padding-left: 1.5rem; line-height: 1.6;">
-                            <li>Click "Login with Telegram" above</li>
-                            <li>Authorize TradePro in your Telegram app</li>
-                            <li>Your account will be created automatically</li>
-                            <li>Start receiving trading notifications instantly</li>
-                        </ol>
-                    </div>
+                    <label class="form-label">Last Name</label>
+                    <input type="text" name="last_name" class="form-control" required>
                 </div>
             </div>
-        </div>
 
-        <div class="register-footer">
-            <p>Already have an account? <a href="/login">Sign in here</a></p>
-            <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-muted);">
-                By creating an account, you acknowledge that you have read and understood our risk disclosures.
-            </p>
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" name="username" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" required>
+                <div class="form-help">We'll use this for account notifications and security alerts</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Phone (Optional)</label>
+                <input type="tel" name="phone_number" class="form-control">
+                <div class="form-help">For two-factor authentication and account recovery</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Confirm Password</label>
+                <input type="password" name="confirm_password" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label style="display: flex; align-items: center; font-size: 0.9rem;">
+                    <input type="checkbox" style="margin-right: 0.5rem;" required>
+                    I agree to the <a href="/terms" style="color: #1E40AF;">Terms of Service</a> and <a href="/privacy" style="color: #1E40AF;">Privacy Policy</a>
+                </label>
+            </div>
+
+            <button type="submit" class="btn-register">
+                <i class="fas fa-user-plus"></i>
+                Create Account
+            </button>
+        </form>
+
+        <div class="login-link">
+            <p>Already have an account? <a href="{{ url_for('login') }}">Sign in here</a></p>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    function switchTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.remove('active');
-        });
-        
-        document.querySelectorAll('.tab-button').forEach(button => {
-            button.classList.remove('active');
-        });
-        
-        document.getElementById(tabName + 'Content').classList.add('active');
-        document.getElementById(tabName + 'Tab').classList.add('active');
-    }
-
-    function checkPasswordStrength(password) {
-        let strength = 0;
-        let feedback = [];
-
-        if (password.length >= 8) strength += 1;
-        else feedback.push('at least 8 characters');
-
-        if (/[A-Z]/.test(password)) strength += 1;
-        else feedback.push('uppercase letter');
-
-        if (/[a-z]/.test(password)) strength += 1;
-        else feedback.push('lowercase letter');
-
-        if (/\d/.test(password)) strength += 1;
-        else feedback.push('number');
-
-        if (/[^A-Za-z0-9]/.test(password)) strength += 1;
-        else feedback.push('special character');
-
-        return { strength, feedback };
-    }
-
-    const passwordInput = document.getElementById('password');
-    if (passwordInput) {
-        passwordInput.addEventListener('input', function() {
-            const password = this.value;
-            const { strength, feedback } = checkPasswordStrength(password);
-            const strengthFill = document.getElementById('strengthFill');
-            const strengthText = document.getElementById('strengthText');
-
-            strengthFill.className = 'strength-fill';
-            
-            if (password.length === 0) {
-                strengthText.textContent = 'Password strength: ';
-                return;
-            }
-
-            if (strength <= 2) {
-                strengthFill.classList.add('strength-weak');
-                strengthText.textContent = 'Password strength: Weak';
-                strengthText.style.color = 'var(--danger-red)';
-            } else if (strength === 3) {
-                strengthFill.classList.add('strength-fair');
-                strengthText.textContent = 'Password strength: Fair';
-                strengthText.style.color = '#F59E0B';
-            } else if (strength === 4) {
-                strengthFill.classList.add('strength-good');
-                strengthText.textContent = 'Password strength: Good';
-                strengthText.style.color = 'var(--success-green)';
-            } else {
-                strengthFill.classList.add('strength-strong');
-                strengthText.textContent = 'Password strength: Strong';
-                strengthText.style.color = 'var(--success-green)';
-            }
-
-            if (feedback.length > 0) {
-                strengthText.textContent += ` (Missing: ${feedback.join(', ')})`;
-            }
-        });
-    }
-
-    const confirmPasswordInput = document.getElementById('confirmPassword');
-    if (confirmPasswordInput) {
-        confirmPasswordInput.addEventListener('input', function() {
-            const password = document.getElementById('password').value;
-            const confirmPassword = this.value;
-            
-            if (confirmPassword && password !== confirmPassword) {
-                this.classList.add('error');
-            } else {
-                this.classList.remove('error');
-            }
-        });
-    }
-
-    setTimeout(function() {
-        const telegramWidget = document.querySelector('iframe[src*="oauth.telegram.org"]');
-        const fallbackButton = document.getElementById('telegramFallback');
-        
-        if (!telegramWidget && fallbackButton) {
-            fallbackButton.style.display = 'inline-flex';
-        }
-    }, 3000);
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const method = urlParams.get('method');
-    if (method === 'telegram') {
-        switchTab('telegram');
-    }
-</script>
 {% endblock %}

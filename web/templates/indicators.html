@@ -1,0 +1,698 @@
+{% extends "base.html" %}
+
+{% block title %}Technical Indicators - TradePro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .indicators {
+        padding: 2rem 0;
+        background: var(--light-gray);
+        min-height: calc(100vh - 80px);
+    }
+
+    .dark .indicators {
+        background: var(--dark-bg);
+    }
+
+    .indicators-header {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid var(--border-gray);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .dark .indicators-header {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .header-title h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--charcoal);
+        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .dark .header-title h1 {
+        background: linear-gradient(135deg, var(--dark-accent), #A855F7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .header-subtitle {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+    }
+
+    .dark .header-subtitle {
+        color: var(--dark-muted);
+    }
+
+    .header-controls {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .symbol-selector {
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-gray);
+        border-radius: 8px;
+        background: var(--white);
+        color: var(--charcoal);
+        font-size: 1rem;
+        min-width: 150px;
+    }
+
+    .dark .symbol-selector {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-text);
+    }
+
+    .indicators-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+    }
+
+    .indicator-card {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid var(--border-gray);
+        transition: all 0.3s ease;
+    }
+
+    .dark .indicator-card {
+        background: var(--dark-surface);
+        border-color: var(--dark-border);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .indicator-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+
+    .dark .indicator-card:hover {
+        box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+
+    .indicator-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-gray);
+    }
+
+    .dark .indicator-header {
+        border-bottom-color: var(--dark-border);
+    }
+
+    .indicator-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--charcoal);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .dark .indicator-title {
+        color: var(--dark-text);
+    }
+
+    .indicator-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: var(--white);
+    }
+
+    .indicator-icon.trend { background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue)); }
+    .indicator-icon.momentum { background: linear-gradient(135deg, var(--success-green), #22C55E); }
+    .indicator-icon.volatility { background: linear-gradient(135deg, var(--wealth-gold), #FCD34D); }
+    .indicator-icon.volume { background: linear-gradient(135deg, #8B5CF6, #A855F7); }
+
+    .indicator-signal {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .signal-buy {
+        background: var(--success-green);
+        color: var(--white);
+    }
+
+    .signal-sell {
+        background: var(--danger-red);
+        color: var(--white);
+    }
+
+    .signal-hold {
+        background: var(--wealth-gold);
+        color: var(--white);
+    }
+
+    .signal-neutral {
+        background: var(--text-muted);
+        color: var(--white);
+    }
+
+    .indicator-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .value-bullish { color: var(--success-green); }
+    .value-bearish { color: var(--danger-red); }
+    .value-neutral { color: var(--text-muted); }
+
+    .dark .value-neutral { color: var(--dark-muted); }
+
+    .indicator-description {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+    }
+
+    .dark .indicator-description {
+        color: var(--dark-muted);
+    }
+
+    .indicator-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .detail-item {
+        background: var(--light-gray);
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .dark .detail-item {
+        background: var(--dark-bg);
+    }
+
+    .detail-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .dark .detail-label {
+        color: var(--dark-muted);
+    }
+
+    .detail-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--charcoal);
+        font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .dark .detail-value {
+        color: var(--dark-text);
+    }
+
+    .chart-mini {
+        height: 100px;
+        background: var(--light-gray);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 1rem 0;
+        border: 1px dashed var(--border-gray);
+    }
+
+    .dark .chart-mini {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+    }
+
+    .chart-placeholder {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        text-align: center;
+    }
+
+    .dark .chart-placeholder {
+        color: var(--dark-muted);
+    }
+
+    .timeframe-selector {
+        display: flex;
+        gap: 0.5rem;
+        background: var(--light-gray);
+        padding: 0.25rem;
+        border-radius: 6px;
+        margin-bottom: 2rem;
+    }
+
+    .dark .timeframe-selector {
+        background: var(--dark-bg);
+    }
+
+    .timeframe-btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        background: transparent;
+        border-radius: 4px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+
+    .dark .timeframe-btn {
+        color: var(--dark-muted);
+    }
+
+    .timeframe-btn.active {
+        background: var(--white);
+        color: var(--primary-blue);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .dark .timeframe-btn.active {
+        background: var(--dark-surface);
+        color: var(--dark-accent);
+    }
+
+    @media (max-width: 768px) {
+        .indicators-header {
+            flex-direction: column;
+            gap: 1.5rem;
+            text-align: center;
+        }
+
+        .header-controls {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .indicators-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .indicator-details {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="indicators">
+        <!-- Indicators Header -->
+        <div class="indicators-header">
+            <div class="header-title">
+                <h1>Technical Indicators</h1>
+                <p class="header-subtitle">Real-time technical analysis for informed trading decisions</p>
+            </div>
+            <div class="header-controls">
+                <select class="symbol-selector" id="symbolSelect">
+                    <option value="AAPL">AAPL - Apple Inc.</option>
+                    <option value="MSFT">MSFT - Microsoft</option>
+                    <option value="GOOGL">GOOGL - Alphabet</option>
+                    <option value="TSLA">TSLA - Tesla</option>
+                    <option value="AMZN">AMZN - Amazon</option>
+                    <option value="NVDA">NVDA - NVIDIA</option>
+                    <option value="META">META - Meta</option>
+                    <option value="NFLX">NFLX - Netflix</option>
+                </select>
+                <button class="btn btn-primary" onclick="refreshIndicators()">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Timeframe Selector -->
+        <div class="timeframe-selector">
+            <button class="timeframe-btn">1m</button>
+            <button class="timeframe-btn">5m</button>
+            <button class="timeframe-btn active">15m</button>
+            <button class="timeframe-btn">1h</button>
+            <button class="timeframe-btn">4h</button>
+            <button class="timeframe-btn">1d</button>
+        </div>
+
+        <!-- Indicators Grid -->
+        <div class="indicators-grid">
+            <!-- Moving Averages -->
+            <div class="indicator-card">
+                <div class="indicator-header">
+                    <div class="indicator-title">
+                        <div class="indicator-icon trend">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        Moving Averages
+                    </div>
+                    <div class="indicator-signal signal-buy">BUY</div>
+                </div>
+                
+                <div class="indicator-value value-bullish">$175.42</div>
+                <div class="indicator-description">
+                    Price is above both 20-day and 50-day moving averages, indicating bullish momentum.
+                </div>
+                
+                <div class="chart-mini">
+                    <div class="chart-placeholder">
+                        <i class="fas fa-chart-area" style="font-size: 2rem; opacity: 0.3; margin-bottom: 0.5rem;"></i>
+                        <div>MA Chart Visualization</div>
+                    </div>
+                </div>
+                
+                <div class="indicator-details">
+                    <div class="detail-item">
+                        <div class="detail-label">MA 20</div>
+                        <div class="detail-value">$173.85</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">MA 50</div>
+                        <div class="detail-value">$171.20</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RSI -->
+            <div class="indicator-card">
+                <div class="indicator-header">
+                    <div class="indicator-title">
+                        <div class="indicator-icon momentum">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        RSI (14)
+                    </div>
+                    <div class="indicator-signal signal-hold">HOLD</div>
+                </div>
+                
+                <div class="indicator-value value-neutral">58.7</div>
+                <div class="indicator-description">
+                    RSI is in neutral territory. Values above 70 indicate overbought, below 30 oversold.
+                </div>
+                
+                <div class="chart-mini">
+                    <div class="chart-placeholder">
+                        <i class="fas fa-wave-square" style="font-size: 2rem; opacity: 0.3; margin-bottom: 0.5rem;"></i>
+                        <div>RSI Oscillator</div>
+                    </div>
+                </div>
+                
+                <div class="indicator-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Overbought</div>
+                        <div class="detail-value">>70</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Oversold</div>
+                        <div class="detail-value"><30</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MACD -->
+            <div class="indicator-card">
+                <div class="indicator-header">
+                    <div class="indicator-title">
+                        <div class="indicator-icon momentum">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        MACD
+                    </div>
+                    <div class="indicator-signal signal-buy">BUY</div>
+                </div>
+                
+                <div class="indicator-value value-bullish">+2.34</div>
+                <div class="indicator-description">
+                    MACD line is above signal line with positive histogram, indicating bullish momentum.
+                </div>
+                
+                <div class="chart-mini">
+                    <div class="chart-placeholder">
+                        <i class="fas fa-chart-bar" style="font-size: 2rem; opacity: 0.3; margin-bottom: 0.5rem;"></i>
+                        <div>MACD Histogram</div>
+                    </div>
+                </div>
+                
+                <div class="indicator-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Signal</div>
+                        <div class="detail-value">1.89</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Histogram</div>
+                        <div class="detail-value">+0.45</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bollinger Bands -->
+            <div class="indicator-card">
+                <div class="indicator-header">
+                    <div class="indicator-title">
+                        <div class="indicator-icon volatility">
+                            <i class="fas fa-expand-arrows-alt"></i>
+                        </div>
+                        Bollinger Bands
+                    </div>
+                    <div class="indicator-signal signal-neutral">NEUTRAL</div>
+                </div>
+                
+                <div class="indicator-value value-neutral">Mid-Band</div>
+                <div class="indicator-description">
+                    Price is trading near the middle band, indicating normal volatility conditions.
+                </div>
+                
+                <div class="chart-mini">
+                    <div class="chart-placeholder">
+                        <i class="fas fa-arrows-alt-v" style="font-size: 2rem; opacity: 0.3; margin-bottom: 0.5rem;"></i>
+                        <div>Bollinger Bands</div>
+                    </div>
+                </div>
+                
+                <div class="indicator-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Upper</div>
+                        <div class="detail-value">$178.50</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Lower</div>
+                        <div class="detail-value">$172.30</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Volume -->
+            <div class="indicator-card">
+                <div class="indicator-header">
+                    <div class="indicator-title">
+                        <div class="indicator-icon volume">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        Volume Analysis
+                    </div>
+                    <div class="indicator-signal signal-buy">HIGH</div>
+                </div>
+                
+                <div class="indicator-value value-bullish">2.5M</div>
+                <div class="indicator-description">
+                    Current volume is 150% above average, confirming price movement strength.
+                </div>
+                
+                <div class="chart-mini">
+                    <div class="chart-placeholder">
+                        <i class="fas fa-chart-column" style="font-size: 2rem; opacity: 0.3; margin-bottom: 0.5rem;"></i>
+                        <div>Volume Bars</div>
+                    </div>
+                </div>
+                
+                <div class="indicator-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Avg Volume</div>
+                        <div class="detail-value">1.67M</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Ratio</div>
+                        <div class="detail-value">150%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stochastic -->
+            <div class="indicator-card">
+                <div class="indicator-header">
+                    <div class="indicator-title">
+                        <div class="indicator-icon momentum">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        Stochastic (14,3,3)
+                    </div>
+                    <div class="indicator-signal signal-sell">SELL</div>
+                </div>
+                
+                <div class="indicator-value value-bearish">78.3</div>
+                <div class="indicator-description">
+                    Stochastic is in overbought territory above 80, suggesting potential reversal.
+                </div>
+                
+                <div class="chart-mini">
+                    <div class="chart-placeholder">
+                        <i class="fas fa-wave-square" style="font-size: 2rem; opacity: 0.3; margin-bottom: 0.5rem;"></i>
+                        <div>Stochastic Oscillator</div>
+                    </div>
+                </div>
+                
+                <div class="indicator-details">
+                    <div class="detail-item">
+                        <div class="detail-label">%K</div>
+                        <div class="detail-value">78.3</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">%D</div>
+                        <div class="detail-value">75.1</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Timeframe selector functionality
+    document.querySelectorAll('.timeframe-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update indicators for selected timeframe
+            updateIndicators(this.textContent);
+        });
+    });
+
+    // Symbol selector change
+    document.getElementById('symbolSelect').addEventListener('change', function() {
+        updateIndicators();
+    });
+
+    function updateIndicators(timeframe = null) {
+        const symbol = document.getElementById('symbolSelect').value;
+        const selectedTimeframe = timeframe || document.querySelector('.timeframe-btn.active').textContent;
+        
+        console.log(`Updating indicators for ${symbol} on ${selectedTimeframe} timeframe`);
+        
+        // Show loading state
+        document.querySelectorAll('.indicator-card').forEach(card => {
+            card.style.opacity = '0.7';
+        });
+        
+        // Simulate API call
+        setTimeout(() => {
+            document.querySelectorAll('.indicator-card').forEach(card => {
+                card.style.opacity = '1';
+            });
+            
+            // Here you would update the actual indicator values
+            // updateIndicatorValues(symbol, selectedTimeframe);
+        }, 1000);
+    }
+
+    function refreshIndicators() {
+        const refreshBtn = document.querySelector('.header-controls .btn');
+        const icon = refreshBtn.querySelector('i');
+        
+        // Add spinning animation
+        icon.style.animation = 'spin 1s linear infinite';
+        
+        // Simulate refresh
+        setTimeout(() => {
+            icon.style.animation = '';
+            updateIndicators();
+        }, 1000);
+    }
+
+    // Auto-refresh indicators every 30 seconds
+    setInterval(() => {
+        updateIndicators();
+    }, 30000);
+
+    // Add CSS for spin animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Simulate real-time updates
+    function simulateRealTimeUpdates() {
+        const indicators = [
+            { selector: '.indicator-card:nth-child(1) .indicator-value', range: [170, 180] },
+            { selector: '.indicator-card:nth-child(2) .indicator-value', range: [30, 70] },
+            { selector: '.indicator-card:nth-child(3) .indicator-value', range: [-5, 5] },
+            { selector: '.indicator-card:nth-child(5) .indicator-value', range: [1, 5] },
+            { selector: '.indicator-card:nth-child(6) .indicator-value', range: [20, 80] }
+        ];
+
+        indicators.forEach(indicator => {
+            const element = document.querySelector(indicator.selector);
+            if (element && indicator.range) {
+                const [min, max] = indicator.range;
+                const newValue = (Math.random() * (max - min) + min).toFixed(2);
+                
+                if (indicator.selector.includes('nth-child(1)')) {
+                    element.textContent = `$${newValue}`;
+                } else if (indicator.selector.includes('nth-child(5)')) {
+                    element.textContent = `${newValue}M`;
+                } else {
+                    element.textContent = newValue;
+                }
+            }
+        });
+    }
+
+    // Update values every 5 seconds for demo
+    setInterval(simulateRealTimeUpdates, 5000);
+</script>
+{% endblock %}
