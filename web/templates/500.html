@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h1 class="display-1 text-danger">500</h1>
+            <h2>Internal Server Error</h2>
+            <p class="lead">We're experiencing some technical difficulties. Our team has been notified and we're working on a fix.</p>
+            <a href="{{ url_for('web.index') }}" class="btn btn-primary">Return to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

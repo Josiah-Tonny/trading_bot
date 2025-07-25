@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}TradePro - Professional Trading Platform{% endblock %}</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -669,7 +670,7 @@
     <header class="header">
         <div class="container">
             <nav class="nav">
-                <a href="{{ url_for('index') }}" class="logo">
+                <a href="{{ url_for('web.index') }}" class="logo">
                     <i class="fas fa-chart-line"></i>
                     TradePro
                 </a>
@@ -681,40 +682,40 @@
                 </button>
                 
                 <ul class="nav-links">
-                    <li><a href="{{ url_for('dashboard.dashboard') }}" class="{% if request.endpoint == 'dashboard.dashboard' %}active{% endif %}">
+                    <li><a href="{{ url_for('web.dashboard.dashboard') }}" class="{% if request.endpoint == 'web.dashboard.dashboard' %}active{% endif %}">
                         <i class="fas fa-tachometer-alt"></i> Dashboard
                     </a></li>
-                    <li><a href="{{ url_for('portfolio') }}" class="{% if request.endpoint == 'portfolio' %}active{% endif %}">
+                    <li><a href="{{ url_for('web.portfolio') }}" class="{% if request.endpoint == 'web.portfolio' %}active{% endif %}">
                         <i class="fas fa-briefcase"></i> Portfolio
                     </a></li>
-                    <li><a href="{{ url_for('trade') }}" class="{% if request.endpoint == 'trade' %}active{% endif %}">
+                    <li><a href="{{ url_for('web.trade') }}" class="{% if request.endpoint == 'web.trade' %}active{% endif %}">
                         <i class="fas fa-exchange-alt"></i> Trade
                     </a></li>
-                    <li><a href="{{ url_for('watchlist') }}" class="{% if request.endpoint == 'watchlist' %}active{% endif %}">
+                    <li><a href="{{ url_for('web.watchlist') }}" class="{% if request.endpoint == 'web.watchlist' %}active{% endif %}">
                         <i class="fas fa-eye"></i> Watchlist
                     </a></li>
-                    <li><a href="{{ url_for('signals') }}" class="{% if request.endpoint == 'signals' %}active{% endif %}">
+                    <li><a href="{{ url_for('web.signals') }}" class="{% if request.endpoint == 'web.signals' %}active{% endif %}">
                         <i class="fas fa-signal"></i> Signals
                     </a></li>
-                    <li><a href="{{ url_for('analysis') }}" class="{% if request.endpoint == 'analysis' %}active{% endif %}">
+                    <li><a href="{{ url_for('web.analysis') }}" class="{% if request.endpoint == 'web.analysis' %}active{% endif %}">
                         <i class="fas fa-chart-bar"></i> Analysis
                     </a></li>
                 </ul>
                 
                 <div class="mobile-menu" id="mobileMenu">
-                    <a href="{{ url_for('dashboard.dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-                    <a href="{{ url_for('portfolio') }}"><i class="fas fa-briefcase"></i> Portfolio</a>
-                    <a href="{{ url_for('trade') }}"><i class="fas fa-exchange-alt"></i> Trade</a>
-                    <a href="{{ url_for('watchlist') }}"><i class="fas fa-eye"></i> Watchlist</a>
-                    <a href="{{ url_for('signals') }}"><i class="fas fa-signal"></i> Signals</a>
-                    <a href="{{ url_for('analysis') }}"><i class="fas fa-chart-bar"></i> Analysis</a>
-                    <a href="{{ url_for('support') }}"><i class="fas fa-life-ring"></i> Support</a>
+                    <a href="{{ url_for('web.dashboard.dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    <a href="{{ url_for('web.portfolio') }}"><i class="fas fa-briefcase"></i> Portfolio</a>
+                    <a href="{{ url_for('web.trade') }}"><i class="fas fa-exchange-alt"></i> Trade</a>
+                    <a href="{{ url_for('web.watchlist') }}"><i class="fas fa-eye"></i> Watchlist</a>
+                    <a href="{{ url_for('web.signals') }}"><i class="fas fa-signal"></i> Signals</a>
+                    <a href="{{ url_for('web.analysis') }}"><i class="fas fa-chart-bar"></i> Analysis</a>
+                    <a href="{{ url_for('web.support') }}"><i class="fas fa-life-ring"></i> Support</a>
                     {% if session.user_id %}
-                        <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Profile</a>
-                        <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        <a href="{{ url_for('web.profile') }}"><i class="fas fa-user"></i> Profile</a>
+                        <a href="{{ url_for('web.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
                     {% else %}
-                        <a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Login</a>
-                        <a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Register</a>
+                        <a href="{{ url_for('web.login') }}"><i class="fas fa-sign-in-alt"></i> Login</a>
+                        <a href="{{ url_for('web.register') }}"><i class="fas fa-user-plus"></i> Register</a>
                     {% endif %}
                 </div>
                 
@@ -728,19 +729,19 @@
                             <span style="color: var(--text-muted); font-size: 0.875rem;">
                                 Welcome, <strong>{{ session.username or 'User' }}</strong>
                             </span>
-                            <a href="{{ url_for('profile') }}" class="btn btn-outline btn-sm">
+                            <a href="{{ url_for('web.profile') }}" class="btn btn-outline btn-sm">
                                 <i class="fas fa-user"></i> Profile
                             </a>
-                            <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm">
+                            <a href="{{ url_for('web.logout') }}" class="btn btn-outline btn-sm">
                                 <i class="fas fa-sign-out-alt"></i> Logout
                             </a>
                         </div>
                     {% else %}
                         <div style="display: flex; align-items: center; gap: 1rem;">
-                            <a href="{{ url_for('login') }}" class="btn btn-outline btn-sm">
+                            <a href="{{ url_for('web.login') }}" class="btn btn-outline btn-sm">
                                 <i class="fas fa-sign-in-alt"></i> Login
                             </a>
-                            <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">
+                            <a href="{{ url_for('web.register') }}" class="btn btn-primary btn-sm">
                                 <i class="fas fa-user-plus"></i> Register
                             </a>
                         </div>
@@ -769,9 +770,9 @@
     <footer class="footer">
         <div class="container" style="max-width: 1000px;">
             <div class="footer-links">
-                <a href="{{ url_for('support') }}"><i class="fas fa-life-ring"></i> Support & FAQ</a>
-                <a href="{{ url_for('terms') }}"><i class="fas fa-file-contract"></i> Terms of Service</a>
-                <a href="{{ url_for('privacy') }}"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+                <a href="{{ url_for('web.support') }}"><i class="fas fa-life-ring"></i> Support & FAQ</a>
+                <a href="{{ url_for('web.terms') }}"><i class="fas fa-file-contract"></i> Terms of Service</a>
+                <a href="{{ url_for('web.privacy') }}"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
             </div>
             <div style="font-size: 0.95rem; margin-bottom: 1rem; max-width: 800px; margin-left: auto; margin-right: auto;">
                 <strong>Risk Disclaimer:</strong> Trading involves substantial risk and may result in the loss of your invested capital. 
